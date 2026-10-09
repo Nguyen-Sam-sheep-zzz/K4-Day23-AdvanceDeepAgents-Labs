@@ -1,0 +1,38 @@
+[
+  {
+    "n": 1,
+    "url": "https://arxiv.org/abs/2210.03629",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 2,
+    "url": "https://arxiv.org/abs/2302.04761",
+    "chars": 1989,
+    "status": "retrieved"
+  },
+  {
+    "n": 3,
+    "url": "https://arxiv.org/abs/2205.00445",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 4,
+    "url": "https://arxiv.org/abs/2506.08119",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 6,
+    "url": "https://www.emergentmind.com/papers/2508.20453",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 8,
+    "url": "https://huggingface.co/papers/2412.14161",
+    "chars": 3367,
+    "status": "retrieved"
+  }
+]

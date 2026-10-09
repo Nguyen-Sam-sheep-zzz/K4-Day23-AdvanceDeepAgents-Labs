@@ -59,7 +59,7 @@ Lab/
 └── reports/                  báo cáo sinh ra (bạn commit vào repo nộp)
 ```
 
-Mỗi tệp "SINH VIÊN CÀI ĐẶT" là **pseudo-code chạy được** (import được): các hàm có docstring mô tả việc cần làm, các `TODO n` đánh số theo `GUIDE.md`, thân hàm đang `raise NotImplementedError`.
+Bốn tệp "SINH VIÊN CÀI ĐẶT" đã được triển khai trong repo này. Kiểm thử offline nằm trong `tests/`; `GUIDE.md` mô tả hợp đồng và các yêu cầu gốc của bài.
 
 ## 4. Cài đặt
 
@@ -79,6 +79,57 @@ Bạn cần ba loại khóa (điền vào `.env`, **không bao giờ commit** `.
 
 ## 5. Làm bài
 
+### Chạy trên Windows PowerShell
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Điền cấu hình vào `.env` trên máy của bạn. Với endpoint tương thích OpenAI, đặt `LAB_MODEL`, `LAB_BASE_URL` và `LAB_API_KEY`. Với provider LangChain, dùng tên dạng `<provider>:<model>` và khóa tương ứng. Model cần hỗ trợ tool calling. Lượt chạy của lab này dùng `gpt-6-luna` qua endpoint riêng do người dùng cấu hình; khả năng truy cập phụ thuộc dịch vụ cung cấp endpoint.
+
+Đặt `SANDBOX=docker` và mở Docker Desktop (Linux engine), hoặc cấu hình `DAYTONA_API_KEY` để dùng Daytona. Nên điền `EXA_API_KEY`; Exa không khóa có thể bị giới hạn rất nhanh. Không tải `.env` lên sandbox hay đưa vào Git.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe tools.py
+.\.venv\Scripts\python.exe -u research.py "survey about world model"
+.\.venv\Scripts\python.exe check_citations.py reports/survey-about-world-model.md reports/survey-about-world-model.sources.json
+.\.venv\Scripts\python.exe self_check.py
+```
+
+`tools.py` gọi nguồn thật; `research.py` gọi model và dùng quota/token. Test offline, validator host và `self_check.py` không gọi mạng hay model.
+
+Chạy đủ năm chủ đề, dừng nếu một lượt thất bại:
+
+```powershell
+$topics = Get-Content topics.md | ForEach-Object {
+    if ($_ -match '^\d+\. (.+)$') { $Matches[1] }
+}
+foreach ($topic in $topics) {
+    .\.venv\Scripts\python.exe -u research.py $topic
+    if ($LASTEXITCODE -ne 0) { throw "Research failed: $topic" }
+}
+```
+
+Mỗi lần thành công sinh ba tệp: `.md` để đọc, `.sources.json` để đối chiếu nguồn và `.meta.json` để kiểm lần chạy. Metadata ghi số task thật, số researcher/checker, số researcher task tối đa trong cùng một AI message, tool calls và token **chỉ của lead**. Chỉ số task trong cùng message là bằng chứng giao việc trong cùng batch; không phải phép đo thời gian thực thi đồng thời. Token thiếu subagent nên không được dùng làm tổng chi phí.
+
+Runner yêu cầu sandbox finalizer và validator thành công, ít nhất ba researcher task trong một batch, ba researcher trả kết quả thành công, một checker trả kết quả thành công và ba source tags, báo cáo có nội dung các phần và 3–5 TL;DR bullets có citation trước khi lưu nguyên bytes tải về. `successful_researcher_calls` và `successful_checker_calls` khớp task ID với ToolMessage thành công; các request lỗi vẫn nằm trong bộ đếm request nhưng không tính là kết quả thành công. Mã thoát 0 nghĩa là đạt các kiểm tra tự động; 1 là lượt lỗi; 2 là thiếu chủ đề. Kiểm tra cấu trúc không thay thế đọc nguồn để xác minh claim.
+
+Nếu gate đầu ra từ chối, runner gửi lịch sử thật cùng lỗi đã che bí mật về lead để sửa **trong sandbox**, tối đa một lượt sửa. Lỗi hạ tầng không kích hoạt lượt sửa này. Model/tool middleware có giới hạn cho mỗi invocation; một lần chạy CLI có tối đa hai invocation của lead. Metadata cộng lịch sử trả về một lần, không nhân đôi token của lượt đầu.
+
+Khi kiểm nguồn độc lập phát hiện lỗi nội dung, dùng phản hồi cụ thể để sinh lại toàn bộ báo cáo:
+
+```powershell
+.\.venv\Scripts\python.exe -u research.py "survey about video and multimodal generation" --review-feedback "Verify every named method against the matching primary source; remove unsupported claims."
+```
+
+Feedback chỉ bổ sung prompt, giữ nguyên chủ đề trong metadata. Các tệp báo cáo/nguồn vẫn do agent tạo, hoàn thiện và kiểm trong sandbox rồi tải về; không sửa tay trên host. Ví dụ phản hồi thật và audit nằm trong `docs/evidence/`.
+
+Nếu arXiv trả 429 kéo dài, hệ thống có thể dùng `hf-daily`, `hf-search`, `web` đúng theo rubric. Researcher tìm Daily Papers lịch sử bằng ngày lấy từ paper đã truy xuất; nó phải ghi tag đúng công cụ và dùng các URL khác nhau sau dedup, không gán tag để đạt số lượng.
+
 Làm theo thứ tự (chi tiết trong `GUIDE.md`):
 
 1. `check_citations.py`: khởi động nhẹ, thuần Python.
@@ -93,6 +144,12 @@ python research.py "survey about world model"
 Kết quả nằm ở `reports/survey-about-world-model.md` cùng `.sources.json` và `.meta.json`.
 
 ## 6. Chủ đề và nộp bài
+
+### Kết quả local đã kiểm (09/10/2026)
+
+Đã sinh đủ 5 bộ báo cáo bằng `gpt-6-luna` + Docker, tổng cộng 15 tệp. Cả năm đạt validator và `self_check.py`; 72 test offline đạt. Mỗi bộ có batch 3 researcher, ít nhất 3 researcher và 1 checker trả kết quả thành công, 3–4 tag nguồn thật. Kiểm nguồn độc lập và giới hạn bằng chứng nằm trong [CLAIM_AUDIT.md](docs/evidence/CLAIM_AUDIT.md); checklist từng dòng rubric trong [SUBMISSION_READINESS.md](docs/SUBMISSION_READINESS.md).
+
+Những kết quả này đang ở checkout local trên `feature/deep-research-lab`; chưa commit/push. Repo remote là public nhưng chưa có năm bộ báo cáo trên `main`. Chỉ gọi là đã công bố sau khi kiểm độc lập đủ tệp remote.
 
 - Chạy đủ **5 chủ đề** trong [`topics.md`](topics.md), mỗi chủ đề một lần.
 - Commit mã nguồn và toàn bộ `reports/`, đẩy lên một **public repo** GitHub và nộp link.

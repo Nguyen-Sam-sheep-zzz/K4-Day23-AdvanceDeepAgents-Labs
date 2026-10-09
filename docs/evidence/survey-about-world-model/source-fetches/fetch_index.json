@@ -1,0 +1,44 @@
+[
+  {
+    "n": 1,
+    "url": "https://arxiv.org/abs/1803.10122",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 2,
+    "url": "https://arxiv.org/abs/1912.01603",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 3,
+    "url": "https://arxiv.org/abs/2206.14176",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 5,
+    "url": "https://arxiv.org/abs/2505.09723",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 7,
+    "url": "https://arxiv.org/abs/2506.04363",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 8,
+    "url": "https://arxiv.org/html/2605.25874",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 9,
+    "url": "https://arxiv.org/html/2510.19788",
+    "chars": 12000,
+    "status": "retrieved"
+  }
+]

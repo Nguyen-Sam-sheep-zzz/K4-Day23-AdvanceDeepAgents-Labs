@@ -1,0 +1,44 @@
+[
+  {
+    "n": 1,
+    "url": "https://arxiv.org/html/2307.04964v1",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 2,
+    "url": "https://arxiv.org/abs/2501.12948",
+    "chars": 4775,
+    "status": "retrieved"
+  },
+  {
+    "n": 3,
+    "url": "https://www.nature.com/articles/s41586-025-09422-z",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 5,
+    "url": "https://huggingface.co/papers/2507.23726",
+    "chars": 2579,
+    "status": "retrieved"
+  },
+  {
+    "n": 6,
+    "url": "https://arxiv.org/abs/2504.13837",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 7,
+    "url": "https://ar5iv.labs.arxiv.org/html/2508.17511",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 8,
+    "url": "https://arxiv.org/html/2511.18397",
+    "chars": 12000,
+    "status": "retrieved"
+  }
+]

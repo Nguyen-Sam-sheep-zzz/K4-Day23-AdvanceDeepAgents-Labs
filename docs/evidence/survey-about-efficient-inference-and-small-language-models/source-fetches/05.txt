@@ -1,0 +1,100 @@
+# Revisiting Pruning vs Quantization for Small Language Models
+URL: https://aclanthology.org/anthology-files/pdf/findings/2025.findings-emnlp.645.pdf
+
+Findings of the Association for Computational Linguistics: EMNLP 2025, pages 12055–12070 November 4-9, 2025 ©2025 Association for Computational Linguistics
+
+### Revisiting Pruning vs Quantization for Small Language Models Zihan Zhou Tsinghua University zh-zhou23@mails.tsinghua.edu.cn
+
+Simon Kurz Zhixue Zhao TU Dortmund University, Lamarr Institute University of Sheffield simon.kurz@tu-dortmund.de zhixue.zhao@sheffield.ac.uk
+
+#### Abstract
+
+Deploying language models on resource constrained devices, such as mobile phones, wearables, and on-device AI assistants, de mands compact, efficient models without sac rificing performance. Compressing Small Lan guage Models (SLMs) is particularly suited for these scenarios, yet their compression dynam ics remain underexplored compared to Large Language Models (LLMs). We systemati cally evaluate leading post-training pruning (SparseGPT, Wanda) and quantization (GPTQ, AWQ) methods across six SLMs from 0.5 to 3.8B, seven languages, and seven downstream tasks. Our results show that quantization con sistently outperforms pruning in preserving model fidelity, multilingual perplexity, and rea soning accuracy. However, quantization’s ad vantages diminish on complex knowledge and reasoning tasks like OpenBookQA, highlight ing a disconnect between compression fidelity and downstream task performance. Notably, trends observed in LLMs (e.g., Wanda’s com petitive performance to SparseGPT) do not generalize to SLMs. For practitioners, we recommend prioritizing quantization (particu larly AWQ) for SLM compression and caution against relying on a single metric.
+
+#### 1 Introduction
+
+The pervasive demand for intelligent systems in diverse applications, from resource-constrained devices to privacy-sensitive offline deployments, necessitates compact models and efficient infer ence (Al-Doghman et al., 2022; Meuser et al., 2024; Gill et al., 2025). Small Language Models (SLMs) offer distinct advantages through their efficiency, faster inference, and lower memory footprint, mak ing them well-suited for deployment in constrained environments (Wang et al., 2025; Lu et al., 2024). Despite their smaller parameter count compared to Large Language Models (LLMs), further com pression is crucial and beneficial to accommodate
+
+Figure 1: Layer-wise activation SNR for quantized and pruned models. Higher SNR indicates better compres sion fidelity. Both pruning (left column) and quantiza tion (right column) exhibit noticeably reduced SNR at similar layers, but quantization consistently achieves higher SNR than pruning across models.
+
+diverse hardware constraints and extend AI applica tions to edge devices (Hao et al., 2024; Pujari and Pakina, 2024; Xu et al., 2024; Wang et al., 2025). Compression techniques such as pruning and quantization have been extensively explored for LLMs; however, the effectiveness of these meth ods when directly applied to SLMs remains un clear. Particularly, advanced pruning methods like SparseGPT (Frantar and Alistarh, 2023a) and Wanda (Sun et al., 2024), and state-of-the-art quan tization methods like GPTQ (Frantar et al., 2023) and AWQ (Lin et al., 2024), have not been thor oughly compared in the context of SLMs (Chrysos tomou et al., 2024; Kurz et al., 2024; Ramesh and Zhao, 2024).1 This gap motivates a principled study to uncover generalizable patterns, which is currently hindered by inconsistent benchmark us age and the lack of comprehensive evaluations in
+
+1Detailed related work in App. A.
+
+12055
+
+existing work. We conduct extensive experiments across multi ple SLMs and compression ratios, evaluating three dimensions: (1) compression fidelity to assess the activation changes after compression, Fig 1 as an example of layer-wise SNR comparison, (2) per plexity to evaluate language modeling capability for multiple languages, and (3) downstream tasks to investigate the reasoning capability. The re sults indicate that quantization consistently outper forms pruning across all three evaluation dimen sions, with particularly strong advantages under high compression. It offers better preservation of compression fidelity and language modeling perfor mance, while its superiority on downstream reason ing tasks is less consistent and varies across models and task types.
+
+#### 2 Methodology
+
+We conduct a comprehensive evaluation of two state-of-the-art pruning and quantization methods each, under two commonly used compression set tings (Sec. 2.1). We experiment with five popu lar SLMs (Sec. 2.3), spanning three-dimensional evaluations: two compression fidelity metrics, per plexity across seven languages, and accuracy on seven downstream tasks (Sec. 2.2). With the full size baseline, this comprehensive setup results in a total of 710 evaluations across methods, models, and languages.
+
+2.1 Model Compression Given the impracticality of evaluating all compres sion methods, we focus on four widely adopted approaches, following the original setup unless specified otherwise.2 We use FP16 as the standard baseline, as it is commonly used for both training and inference with negligible accuracy loss. Ac cordingly, we compare 50% pruning sparsity to INT8 quantization, and 75% sparsity to INT4. Quantization. We consider GPTQ (Frantar et al., 2023) and AWQ (Lin et al., 2024) for 4bit and 8-bit weight quantization. Since GPTQ was proposed before the release of Llama, we use the hyperparameters from the GPTQModel library.3
+
+2Complete hyperparameters are provided in App. B. We 
+also assume no overhead on storing the sparsity mask for 
+pruning and relegate such hardware-specific implementations 
+to section 2.4. 
+3https://github.com/ModelCloud/GPTQModel 
+
+Pruning. We adopt SparseGPT (Frantar and Al istarh, 2023a) and Wanda (Sun et al., 2024), both based on unstructured pruning, which is commonly used in post-training compression studies. 2.2 Evaluation Metrics and Tasks To comprehensively compare post-training prun ing and quantization, we evaluate compression fidelity by measuring Signal-to-Noise Ratio (SNR) and compression errors of layer outputs (App. C.1). We further assess multilingual language modeling and zero-shot downstream performance. For mul tilingual language modeling, we cover seven lan guages of different scripts and language families: English (en), Arabic (ar), Hindi (hi), Chinese (zh), Thai (th), German (de), and Spanish (es) (256 sam ples with 2048 tokens each, mc4). For zero-shot natural language understanding tasks, we in clude zero-shot tasks used in the original work of GPTQ, AWQ, SparseGPT, and Wanda. These are: (1) ARC easy (ARC-e) and (2) ARC challenge (ARC-c) sets (Clark et al., 2018); (3) BoolQ (Clark et al., 2019); (4) HellaSwag (Zellers et al., 2019); (5) WinoGrande (Sakaguchi et al., 2021); (6) Open BookQA (Banerjee et al., 2019); (7) RTE (Dagan et al., 2005). These benchmarks collectively cover multiple choice, Cloze, entailment, and Winograd style formats, and test a range of reasoning capabil ities from common sense to factual and linguistic inference. We report the evaluation set sizes in the Appendix. C.4. 2.3 Models We use five popular open-source SLMs: Llama 3.2 1B Instruct (Llama3.2)4, DeepSeek R1 Distill Qwen 1.5B (R1)5, Qwen2.5 1.5B Instruct (Qwen2.5)6, SmolLM2 1.7B Instruct (SmolLM2)7, and Phi3.5 mini instruct (Phi3.5)8. 2.4 Implementation Details We follow Frantar et al. (2023) for hyperparameter and calibration setup9. To create the calibration sets, we use the publicly available version of each
+
+4https://huggingface.co/meta-llama/Llama-3.2-1B Instruct 5https://huggingface.co/deepseek-ai/R1 6https://huggingface.co/Qwen/Qwen2.5 7https://huggingface.co/HuggingFaceTB/SmolLM2 8https://huggingface.co/microsoft/Phi-3.5-mini-instruct 9For the sensitivity of the calibration dataset, we refer in terested readers to Williams and Aletras (2024) for a particular investigation of the calibration dataset. 12056
+
+Model Sparsity/Bit-width Method SNR ↑ Error(× 10− 4) ↓
+
+R1
+
+0.50 / 8-bit
+
+SparseGPT 13.61 0.855 
+Wanda 11.11 1.59 
+AWQ 50.91 0.000 
+GPTQ 43.61 0.001 
+
+0.75 / 4-bit
+
+SparseGPT 5.48 5.95 
+Wanda 0.58 22.39 
+AWQ 19.83 0.209 
+GPTQ 19.48 0.226 
+Qwen2.5 
+
+0.50 / 8-bit
+
+SparseGPT 15.12 2.79 
+Wanda 9.81 11.66 
+AWQ 53.34 0.000 
+GPTQ 49.05 0.001 
+
+0.75 / 4-bit
+
+SparseGPT 1.82 78.43 
+Wanda 0.56 104.12 
+AWQ 22.91 0.399 
+GPTQ 18.22 1.495 
+Llama3.2 
+
+0.50 / 8-bit
+
+SparseGPT 17.61 0.915 
+Wanda 16.32 1.270 
+AWQ 51.09 0.001 
+GPTQ 37.61 0.015 
+
+0.75 / 4-bit
+
+SparseGPT 12.59 2.850 
+Wanda 9.17 6.851 
+AWQ 22.55 0.303 
+GPTQ 15.39 2.281 
+
+Table 1: Layer-wise average activation SNR and com pression error (Error). Full results with the other four models are in App. D. The best among the same com pression level are in bold per metric.
+
+source dataset from Hugging Face Datasets (Lhoest et al., 2021). Similarly, we use the weights and im plementation of each model from Hugging Face Transformers (Wolf et al., 2020). To ensure that our model evaluations are robust and reproducible, we use the EleutherAI Language Model Evalua tion Harness (Gao et al., 2024). Each model is compressed and evaluated using a single NVIDIA A100 (SXM 80GB) GPU.
+
+#### 3 Results and Analysis
+
+3.1 Fidelity: SNR and Compression Error As shown in Table 1 (see full results in App. D), quantization consistently preserves the origi nal signal more effectively than pruning, as ev idenced by both SNR and compression error met rics. At 50% sparsity, which corresponds to 8-bit quantization, AWQ achieves an average SNR of 50.9 on R1, and GPTQ follows closely at 43.6. In comparison, SparseGPT and Wanda drop signifi cantly to 13.6 and 11.1 , respectively. At a higher sparsity level of 75%, pruning becomes increas ingly unstable. The average SNR of Qwen2.5 at 75% sparsity falls to around 1, indicating severe degradation, while quantization continues to retain moderate fidelity in the range of 18–23. We ob serve the consistent pattern on the other SLMs. Interestingly, SparseGPT consistently outper forms Wanda in preserving activation fidelity, which is in contrast to the previous findings on LLMs in Sun et al. (2024). For instance, in Qwen2.5 at 50% sparsity, SparseGPT yields 15.12 average SNR compared to 9.81 with Wanda. Be tween quantization methods, AWQ outperforms GPTQ across all models. The identical ranking on five architectures suggests that the compression method, rather than the backbone design, primarily determines fidelity. We also observe strong correla tions between SNR degradation and model depth for both pruning and quantization, where SNR ex hibits a roughly monotonic decline from the first layer, except for Phi3.5. 3.2 Language Modeling: Perplexity As shown in Fig. 2, quantization consistently out performs pruning on language modeling (full details are in App. E), particularly under high com pression ratios. Quantization performance remains remarkably low and stable across different com pression ratios, models and languages, while prun ing sensitivity varies significantly. For instance, on the R1 model with 75% compression, AWQ yields a PPL of 32.3 for English and 185 for Arabic, while SparseGPT degrades sharply to 292.4 and 13,470, respectively. The gap is less dramatic at lower compression levels. On SLMs, SparseGPT consis tently surpasses Wanda in maintaining performance across models and languages, which is also in con trast to previous findings on LLMs that Wanda outperforms SpareseGPT Sun et al. (2024). Fur ther, similar to compression fidelity, AWQ achieves slightly better results than GPTQ in most cases. We also find that pruning disproportionately af fects long-tail or typologically distinct-to-English languages (e.g., Arabic, Thai, Chinese) compared
+
+Figure 2: Comparing pruning and quantization on down stream reasoning accuracy. Each point corresponds to a specific model, method, and sparsity configuration. Quantization meth

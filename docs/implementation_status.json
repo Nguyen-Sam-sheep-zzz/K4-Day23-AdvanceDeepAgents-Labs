@@ -1,0 +1,192 @@
+{
+  "provided_sha256": {
+    "model.py": "a9e82039c84d52f1bd08481e78d72947eca99eb5bbde3a2ba7bd9e1981696853",
+    "sandbox.py": "6b34f187ba60ca29a9dcd89d2aeb4f38e30a9613c7a1bc84e09ebe7edd8144e9",
+    "self_check.py": "878fe514e3684b4a829963632bbce619930641babe62b01c5c6150b282c55368",
+    "finalize_citations.py": "d3a0ddaeb042a630a8066d7b327d0cb385cbe03e7a22dca107324f7e6a1280b9",
+    "GUIDE.md": "6802492b676e7730e5e6a7904183de89df5e9c6250002fadd4fd1c6a4b4c03b8",
+    "RUBRIC.md": "7e688dd5eae1882d841d4d4740da584b6ecc732ef4798f6c26b15ea4d5ef9751",
+    "REPORT_TEMPLATE.md": "1f6e576ad2d3b75724a019dae3dd7c3c83f759b482c9bfec85ce2aec97932781",
+    "topics.md": "c767bfd9054838ce5dfc172a272aefef938287665998e5de9b857a268a0bb562"
+  },
+  "steps": {
+    "1": "completed: environment and validator",
+    "2": "completed: retry and5 source tools; final live smoke5/5 data",
+    "3": "completed: bounded lead/researcher/checker with real parallel batches",
+    "4": "completed: sandbox runner, successful result gates, one output repair, sanitized review feedback",
+    "5": "completed:5 genuine trios, validators and32 independent sampled claim checks",
+    "6": "local preflight completed; Git integration/publication awaiting user choice"
+  },
+  "environment": {
+    "python": "3.11.7",
+    "pip_check": "passed in final verification",
+    "sandbox": "docker",
+    "sandbox_smoke": "Docker29.6.1 restored after waiting for crashed processes and moving empty IPC directories",
+    "model": "gpt-6-luna",
+    "model_smoke": "tool calling passed (82 tokens)",
+    "exa_smoke": "web_search and web_fetch passed with configured key",
+    "last_source_smoke": "2026-10-09: all5 tools returned real data; earlier arXiv429 resolved"
+  },
+  "live_tools": {
+    "hf_daily_papers": "passed, 3 records",
+    "hf_search_papers": "passed, 3 records",
+    "web_search": "passed, 6566 chars",
+    "web_fetch": "passed, 12000 chars",
+    "arxiv_search": "passed in final tools.py CLI smoke; historical429 resolved"
+  },
+  "remote": {
+    "repo": "Nguyen-Sam-sheep-zzz/K4-Day23-AdvanceDeepAgents-Labs",
+    "public": true,
+    "changes_pushed": false,
+    "default_branch": "main",
+    "report_artifacts_on_default_branch": 0,
+    "verified": "2026-10-09 viaGitHub API and git ls-remote"
+  },
+  "research_attempts": [
+    {
+      "topic": "survey about world model",
+      "attempt": 1,
+      "result": "failed safely before publication",
+      "reason": "fewer than three source tags survived finalization",
+      "observed_tags": [
+        "hf-search",
+        "web"
+      ],
+      "notes": "3 researchers dispatched together; extra latest daily attempt failed relevance; dated daily probes returned topic papers; prompt refinement underway; historical HF daily prompt strategy now implemented;61 tests pass"
+    },
+    {
+      "topic": "survey about world model",
+      "attempt": 2,
+      "result": "stopped before publication and own sandbox removed",
+      "reason": "lead emitted initial researcher tasks sequentially despite endpoint supporting3 parallel toolcalls",
+      "fix": "lead-only initial delegation middleware gate, no fabricated toolcalls"
+    },
+    {
+      "topic": "survey about world model",
+      "attempt": 3,
+      "result": "published and host validator OK",
+      "n_sources": 12,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "notes": "Initial batch3;4 researcher requests and2 checker requests. Saved before successful-result metadata refinement; genuine4 note files captured;7 URLs fetched independently. Source-date fields follow retrieval metadata, not independent bibliographic normalization."
+    },
+    {
+      "topic": "survey about reinforcement learning for LLM reasoning",
+      "attempt": 1,
+      "result": "published and audited",
+      "n_sources": 12,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "successful_researcher_calls": 3,
+      "successful_checker_calls": 1,
+      "max_parallel_researchers": 3,
+      "audit": "host validator OK;7 URLs reopened;6 claim checks supported;see CLAIM_AUDIT.md for limits"
+    },
+    {
+      "topic": "survey about LLM agents and tool use",
+      "n_sources": 11,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "successful_researcher_calls": 3,
+      "successful_checker_calls": 1,
+      "max_parallel_researchers": 3,
+      "attempt": 1,
+      "result": "published and audited",
+      "audit": "host validator OK;6 URLs and6 claims checked;see CLAIM_AUDIT.md"
+    },
+    {
+      "topic": "survey about video and multimodal generation",
+      "attempt": 1,
+      "result": "failed safely before publication",
+      "reason": "report used title-case Trends and Open Problems instead of literal required heading",
+      "manual_audit": "Draft VideoGPT claim cited a different survey; no output accepted",
+      "fix": "Explicit case-sensitive headings; verify named method/source match after renumbering;checker minimum5 claims and numerical/foundational checks"
+    },
+    {
+      "topic": "survey about video and multimodal generation",
+      "attempt": 2,
+      "result": "archived factual-audit failure; superseded by successful attempt3",
+      "n_sources": 14,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "audit": "VideoGPT claim points to Video Diffusion Models; DreamFoley to WorldSonus. Neither named method appears in reopened excerpt. Structural validator OK does not establish factual support. Old bytes preserved in docs/evidence/video-attempt2/artifacts."
+    },
+    {
+      "topic": "survey about video and multimodal generation",
+      "n_sources": 12,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "successful_researcher_calls": 4,
+      "successful_checker_calls": 1,
+      "max_parallel_researchers": 3,
+      "attempt": 3,
+      "result": "published and independently audited; supersedes attempt2",
+      "audit": "7 URLs reopened;6 claims supported; unverified10-second limit removed by system"
+    },
+    {
+      "topic": "survey about efficient inference and small language models",
+      "n_sources": 18,
+      "source_families": [
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "successful_researcher_calls": 4,
+      "successful_checker_calls": 1,
+      "max_parallel_researchers": 3,
+      "attempt": 1,
+      "result": "published and independently audited",
+      "audit": "7 standard URLs plus3 extended reads;7 claim checks supported;validator OK"
+    },
+    {
+      "topic": "survey about world model",
+      "n_sources": 14,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "successful_researcher_calls": 4,
+      "successful_checker_calls": 1,
+      "max_parallel_researchers": 3,
+      "attempt": 4,
+      "result": "final published and independently audited; supersedes attempt3",
+      "audit": "7 URLs reopened;7 claims supported; foundational primary sources added; validator OK"
+    }
+  ],
+  "code_review": "Independent read-only reviews approved final gates/repair/CLI boundaries;72/72 tests independently passed",
+  "final_verification": {
+    "tests": 72,
+    "tests_passed": 72,
+    "pip_check": "passed",
+    "self_check": "passed for all5 topics and tracked secrets",
+    "diff_check": "passed",
+    "candidate_secret_scan": "pattern and configured-value scan passed",
+    "protected_hashes": "all8 unchanged",
+    "containers_remaining": 0,
+    "report_artifacts": 15,
+    "claim_audit_count": 32,
+    "details": "docs/evidence/final_preflight.json"
+  }
+}

@@ -1,0 +1,59 @@
+# Paper page - WorldSonus: Bringing Sound to Worlds
+URL: https://huggingface.co/papers/2610.08760
+Author: Pengjun Fang
+
+# WorldSonus: Bringing Sound to Worlds
+
+Published on Oct 5
+
+· Submitted by
+
+ Zeyue
+
+on Oct 8
+
+Authors:
+
+ Pengjun Fang ,
+
+Jingyi Fa ,
+
+Kam Man Wu ,
+
+Jiaming Wang ,
+
+Haoyuan Huang ,
+
+Yaguang Wu ,
+
+Xiangjun Huang ,
+
+Ziyang Ma ,
+
+Weijia Chen ,
+
+Hongyu Liu ,
+
+Zeyue Tian ,
+
+Qifeng Chen 
+
+## Abstract
+
+Recent advances in world models have enabled increasingly realistic visual synthesis. However, these generated environments remain largely silent. Bringing sound to world models poses three core challenges: real-time generation to keep pace with interactive video streams, interactive control to respond to mid-stream sound instructions, and spatially aligned stereo to reflect scene geometry and camera motion. To address these demands, we introduce WorldSonus, an interactive video-to-audio framework designed for real-time spatial sound synthesis in world models. For real-time generation, WorldSonus employs a streaming causal autoregressive diffusion architecture that synthesizes audio chunks at a low real-time factor (RTF) of 0.41. For interactive control, we incorporate an audio-centric captioning pipeline with chunk-indexed prompt scheduling, enabling dynamic manipulation of sound events during generation. For spatial alignment, we leverage high-quality stereo supervision curated from diverse stereo and ambisonic data. Extensive experiments demonstrate that while tailored for world models, WorldSonus generalizes effectively to open-domain video-to-audio benchmarks, matching or outperforming state-of-the-art bidirectional models in both acoustic quality and spatial alignment. Project page: https://noizai.github.io/WorldSonus/
+
+View arXiv page View PDF Project page GitHub 91 Add to collection 
+
+### Community
+
+Paper submitter 1 day ago
+
+WorldSonus, an interactive video-to-audio framework designed for real-time spatial sound synthesis in world models
+
+librarian-bot
+
+about 10 hours ago
+
+This is an automated message from the Librarian Bot. I found the following papers similar to this paper. 
+
+ You can directly ask Librarian Bot for paper recommendations by tagging it in a comment: `@librarian-bot recommend`

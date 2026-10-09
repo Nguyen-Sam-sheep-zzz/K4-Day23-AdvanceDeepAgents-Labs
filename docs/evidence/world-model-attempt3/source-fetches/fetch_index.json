@@ -1,0 +1,44 @@
+[
+  {
+    "n": 1,
+    "url": "https://arxiv.org/abs/2606.00133",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 3,
+    "url": "https://arxiv.org/abs/2412.08261",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 4,
+    "url": "https://proceedings.mlr.press/v267/gao25u.html",
+    "chars": 3331,
+    "status": "retrieved"
+  },
+  {
+    "n": 5,
+    "url": "https://arxiv.org/html/2506.04363",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 6,
+    "url": "https://papers.neurips.cc/paper_files/paper/2025/file/4ec03ed08a3fcb59e1c815b5598beff1-Paper-Datasets_and_Benchmarks_Track.pdf",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 8,
+    "url": "https://huggingface.co/papers/2510.18135",
+    "chars": 4267,
+    "status": "retrieved"
+  },
+  {
+    "n": 10,
+    "url": "https://huggingface.co/papers/2604.26694",
+    "chars": 12000,
+    "status": "retrieved"
+  }
+]

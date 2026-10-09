@@ -1,0 +1,318 @@
+# Towards Unified Evaluation of Prompt Enhancers for Video Generation
+URL: https://arxiv.org/abs/2610.11736
+Published: 2026-10-08
+Author: Yawen Shao
+
+Towards Unified Evaluation of Prompt Enhancers for Video Generation
+
+tcboxmath \tl_set:Ne\tcbhighmath tcbhighmath 1]University of Science and Technology of China 2]Wan Team, Alibaba Group 4]Fudan University 5]Tsinghua University 6]Northeastern University \addtolist [*]Equal contribution\contributionlist\contributionformat, \addtolist [†]Project leader\contributionlist\contributionformat, \addtolist [‡]Corresponding author\contributionlist\contributionformat,
+
+# Towards Unified Evaluation of Prompt Enhancers for Video Generation
+
+ Yawen Shao Yubo Zhu Ziyun Dai Zixun Fang Kai Zhu Yufeng Ai Siyang Sun Haolan Xue Yu Shang Yuxiang Bao Jingming Luo Jie Xiao Chaojie Mao Zhehan Kan Hongchen Luo Sheng Zhong Wei Tong Xueyang Fu Yang Cao Wei Zhai Zheng-Jun Zha Affiliation: [ Affiliation: [ Affiliation: [ Affiliation: [ Affiliation: [ 
+
+###### Abstract
+
+Modern video generators can realize increasingly complex visual narratives, positioning the prompt enhancer (PE) as a critical bridge from concise user instructions and multimodal references to structured cinematic plans. However, existing PE evaluation relies on rendered videos, imposing substantial computational and human costs, slowing PE training and iteration, and conflating PE quality with downstream generator behavior. To address this gap, we introduce PEBench, the first unified benchmark for direct PE evaluation across text-to-video, image-to-video, and reference-to-video prompt enhancement. It comprises 1,100 expert-verified cases and 1,005 visual assets, spanning 35 fine-grained tasks with diverse temporal, cinematic, audiovisual, and multi-reference requirements. In addition, we develop PEBench evaluation, an evidence-grounded framework that combines modality-aware fact extraction with rubric-based assessment across 24 criteria. Our systematic evaluation of representative open- and closed-source PE methods reveals an emerging shift from fine-grained descriptive expansion toward intent-preserving cinematic planning, while the caption-reconstruction and forward-refinement methods show complementary strengths in cinematic coverage and semantic fidelity or internal coherence, respectively. Human validation shows that PEBench scores align closely with expert judgments of enhanced prompts and downstream videos from Wan3.0 and MiniMax-H3, indicating that prompt-level evaluation reliably reflects downstream utility.
+
+Project page: https://github.com/yawen-shao/PEBench
+
+## 1 Introduction
+
+Rapid advances in large-scale video generation models [1, 2, 3] have transformed content creation by enabling diverse video synthesis from natural-language instructions and multimodal references. Despite their remarkable capabilities, the quality and fidelity of generated videos remain strongly influenced by input conditions that adequately express user intent and generation requirements [4, 5]. Concise or ambiguous user instructions can lead generators to misinterpret the bindings between subjects and actions, the intended event order, or the roles of visual references, revealing a mismatch between user intent and model interpretation. A prompt enhancer (PE) addresses this mismatch by converting user instructions and conditioning inputs into an enhanced prompt that guides downstream generation, making PE quality an important factor in high-quality video synthesis [5].
+
+However, PE development remains constrained by an indirect evaluation loop: validating each update requires downstream video synthesis followed by automatic scoring or blind human comparisons [5, 6, 7, 8, 9, 10]. These computational and human costs delay feedback for training and refinement. Beyond this inefficiency, rendered videos reflect the joint influence of PE quality and generator capability, making observed errors difficult to attribute reliably to either component. These limitations motivate direct evaluation of enhanced prompts to assess PE quality independently of generator behavior and provide rapid, PE-specific feedback throughout iterative refinement.
+
+Figure 1: Overview of PEBench. (a) PEBench unifies T2V-PE, I2V-PE, and R2V-PE for direct prompt-level evaluation without video generation. (b) The dataset contains 1,100 expert-verified cases and 1,005 visual assets, covering diverse tasks, content, and conditioning complexity through a four-stage construction pipeline. (c) The evidence-grounded framework combines modality-aware evidence construction with rubric-based evaluation across 24 fine-grained criteria organized into Semantic Fidelity, Internal Consistency, and Directorial Creation.
+
+In this paper, we introduce PEBench, the first unified benchmark for direct evaluation of video prompt enhancers. As illustrated in Figure 1(a), PEBench spans T2V-PE, I2V-PE, and R2V-PE, covering text-only, first-frame, and multi-reference conditioning. Figure 1(b) summarizes 1,100 expert-verified cases and 1,005 visual assets, covering 35 fine-grained task types with broad variation in content, language, and conditioning complexity. To ensure diversity and quality, we employ a staged dataset construction pipeline combining broad scenario coverage with rigorous verification. Beyond dataset construction, the evidence-grounded framework in Figure 1(c) evaluates each enhanced prompt against the original instruction and modality-aware facts extracted from visual inputs where applicable. Its 24 fine-grained criteria form three complementary dimensions: Semantic Fidelity verifies the preservation of source requirements, Internal Consistency examines narrative, spatiotemporal, and audiovisual coherence, and Directorial Creation assesses the quality of creative guidance for realizing the intended video. A unified rubric-based evaluator reports criterion pass rates and dimension scores, yielding an interpretable profile of PE quality.
+
+Using PEBench, we systematically evaluate representative open- and closed-source PE systems across T2V-PE, I2V-PE, and R2V-PE, revealing four key findings, most notably an emerging shift toward cinematic planning among industry-developed PE and observed links between specific training strategies and capability profiles. (i) Prompt enhancement is evolving from fine-grained descriptive expansion toward intent-preserving cinematic planning as video generators become increasingly capable. (ii) Caption-reconstruction methods achieve broader cinematic coverage, whereas forward-refinement methods favor semantic preservation or internal coherence. (iii) Increasing temporal and reference complexity generally degrades PE performance. (iv) PEBench evaluation scores achieve Spearman correlations above 0.8 with expert rankings of enhanced prompts and downstream videos produced by Wan3.0 and MiniMax-H3, indicating that prompt-level evaluation reliably reflects downstream utility across generators.
+
+Our contributions are summarized as follows:
+
+- •
+
+We introduce PEBench, the first unified benchmark for direct evaluation of video prompt enhancers across T2V-PE, I2V-PE, and R2V-PE, comprising 1,100 expert-verified cases and 1,005 visual conditioning assets spanning 35 fine-grained task types.
+- •
+
+We propose PEBench Evaluation, an evidence-grounded framework that combines modality-aware fact extraction for visually conditioned tasks with rubric-based assessment.
+- •
+
+We systematically evaluate representative PE, revealing a shift toward cinematic planning and capability differences associated with training strategies, while confirming human alignment and downstream utility across generators.
+
+## 2 Related work
+
+Prompt Enhancement for Video Generation. As video generators increasingly support temporally structured and multimodally conditioned content [1, 2, 11], prompt enhancers (PE) have become important for translating concise user intent into detailed instructions for downstream video generation. Existing approaches [12, 13, 14] broadly follow training-based or inference-time paradigms. Training-based methods learn prompt rewriting from constructed supervision or preference signals. VPO [6] and Prompt-A-Video [9] optimize LLM-based rewriters using supervised and preference objectives. WanPE [5] instead reconstructs detailed video captions from compressed prompts using video-grounded inverse pairs, while LingBot-Video-PE [15] maps expanded prompts into model-specific structured captions. In contrast, inference-time methods adopt diverse strategies: RAPO [8] retrieves relevant examples, while SCMaPR [7] performs agentic verification and correction. LTX-2.5-PE [16] directly rewrites prompts using its integrated Gemma 4 text encoder [17], whereas H3-Context-IR [3] employs a multi-stage multimodal workflow.
+
+Benchmarks for Video Generation and Prompt Enhancement. Video-generation benchmarks have evolved from assessing T2V quality and prompt alignment [18, 19, 20] to covering reference-conditioned, multi-shot, audio-video, and streaming generation [21, 22, 23, 24]. However, these benchmarks are designed to assess rendered videos rather than enhanced prompts. Applying them to PE evaluation requires an additional generation stage, increasing evaluation cost and latency while entangling PE performance with downstream generator behavior. As summarized in Table 1, PEBench instead evaluates enhanced prompts directly across T2V-PE, I2V-PE, and R2V-PE using standardized rubrics covering 24 criteria, enabling fine-grained assessment independent of downstream video generation while offering broad coverage of prompt structures and conditioning modalities at scale.
+
+Table 1: Comparison with existing video-generation benchmarks. Cine.: cinematic and camera control; Scripted: temporal or shot-level prompts; Audio Req.: explicit audio requirements in prompts; Multi-lang.: three or more languages; Video Ref.: conditioning on reference videos; Direct PE: direct prompt-level PE evaluation decoupled from downstream video generators. 
+
+Benchmark 
+
+T2V
+
+I2V
+
+R2V
+
+Cine.
+
+Scripted
+
+ Multi- shot 
+
+ Audio Req. 
+
+ Multi- lang. 
+
+ Video Ref. 
+
+ Direct PE 
+
+ # Metrics 
+
+ # Prompts 
+
+ # Ref. Assets 
+
+VBench [18] 
+
+✓
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗ 
+
+16
+
+$\sim$ 1,600
+
+–
+
+EvalCrafter [19] 
+
+✓
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗ 
+
+17
+
+700
+
+–
+
+Video-Bench [20] 
+
+✓
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗ 
+
+9
+
+419
+
+–
+
+OpenS2V-Nexus [21] 
+
+✓
+
+✗
+
+✓
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗
+
+✗ 
+
+6
+
+180
+
+180
+
+UniVBench [22] 
+
+✓
+
+✗
+
+✓
+
+✓
+
+✓
+
+✓
+
+✗
+
+✗
+
+✗
+
+✗ 
+
+21
+
+200
+
+864
+
+MSAVBench [23] 
+
+✓
+
+✗
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✗
+
+✗ 
+
+20
+
+286
+
+165
+
+StreamAV-Bench [24] 
+
+✓
+
+✗
+
+✗
+
+✗
+
+✓
+
+✗
+
+✓
+
+✗
+
+✗
+
+✗ 
+
+32
+
+320
+
+–
+
+PEBench (Ours) 
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓
+
+✓ 
+
+24
+
+1,100
+
+1,005
+
+### 3.1 Task Definition
+
+A video prompt enhancer takes a user prompt, optional reference assets $\mathcal{R}$, and a target duration as input and produces an enhanced prompt for a downstream video generator, as illustrated in Figure 1(a). PEBench evaluates this output directly without requiring video generation, thereby separating PE quality from downstream generator behavior. Specifically, it assesses whether the enhanced prompt preserves user intent and conditioning constraints, remains internally consistent, and provides sufficient detail to specify the intended video.
+
+To provide comprehensive coverage, PEBench introduces a unified benchmark for evaluating prompt enhancers across three distinct task settings:
+
+- •
+
+Text-to-Video Prompt Enhancement (T2V-PE). Given a user prompt and a target duration, with no reference assets ($\mathcal{R}=\varnothing$), the PE should produce a detailed prompt that faithfully expands the requested video content.
+- •
+
+Image-to-Video Prompt Enhancement (I2V-PE). Given a user prompt, a first-frame image ($\mathcal{R}=\{I_{0}\}$), and a target duration, the PE should preserve the visible initial state and describe a coherent, instruction-aligned temporal continuation.
+- •
+
+Reference-to-Video Prompt Enhancement (R2V-PE). Given a user p

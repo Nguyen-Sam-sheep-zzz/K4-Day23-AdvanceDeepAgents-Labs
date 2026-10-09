@@ -1,0 +1,97 @@
+# Benchmarking World-Model Learning
+URL: https://arxiv.org/html/2510.19788
+
+Benchmarking World-Model Learning
+
+# Benchmarking World-Model Learning
+
+Archana Warrier1,2, Thanh Dat Nguyen1,3, Michelangelo Naim1, Moksh Jain1,4, Yichao Liang1,5, Karen Schroeder1, Cambridge Yang1, Joshua B. Tenenbaum6, Sebastian Vollmer2, Kevin Ellis7, Zenna Tavares1 1Basis Research Institute, 2DFKI GmbH, 3Harvard University, 4Université de Montréal & Mila - Quebec AI Institute, 5University of Cambridge, 6Massachusetts Institute of Technology, 7Cornell University
+
+###### Abstract
+
+Model-learning agents should gather information to learn world models that support many downstream tasks and inferences, such as predicting unobserved states, estimating near- and far-term consequences of actions, planning action sequences, and detecting changes in dynamics. Current methods for learning and evaluating world models diverge from this goal: training and evaluation are anchored to next-frame prediction, and success is scored by reward maximization in the same environment. We propose WorldTest, a protocol to evaluate model-learning agents that separates reward-free interaction from a scored test phase in a different but related environment. WorldTest is open-ended—models should support many different tasks unknown ahead of time—and agnostic to model representation, allowing comparison across approaches. We instantiated WorldTest with AutumnBench, a suite of 43 interactive grid-world environments and 129 tasks across three families: masked-frame prediction, planning, and predicting changes to the causal dynamics. We compared 517 human participants and three frontier models on AutumnBench. We found that humans outperform the models, and scaling compute improves performance only in some environments but not others. WorldTest provides a novel template—reward-free exploration, derived tests, and behavior-based scoring—to evaluate what agents learn about environment dynamics, and AutumnBench exposes significant headroom in world-model learning.
+
+## 1 Introduction
+
+Consider someone who cooks regularly in their own kitchen. Over time, they build an internal model of the workspace—where tools live and how appliances behave. That model supports various everyday capabilities. For example, it enables the person to: (1) Predict how long the hidden contents of a covered pot will take to finish cooking, based on steam intensity and elapsed time, (2) Recognize and adapt to changes when traveling and cooking in a short-term rental, where the kitchen is different (e.g., knives in a different drawer), and (3) Plan a sequence of actions to complete a set of recipes. Cognitive science refers to this flexible, predictive, and counterfactual understanding as world model (Weisberg & Gopnik, 2013), a core substrate of human intelligence. Many researchers argue that learning such models is pivotal for the next step in AI progress (LeCun & Courant, 2022).
+
+##### Benchmarking World-Model Learning with Environment-Level Queries
+
+A core challenge in world-model research is evaluation. Classic reinforcement learning (RL) benchmarks assess agents through task-specific rewards (Brockman et al., 2016). While agents may implicitly build a representation of the environment structure as they pursue rewards—for example, learning that one burner is more efficient because using it leads to faster cooking and thus higher returns—RL benchmarks do not directly test if the agent learns this structure. To evaluate world models rather than task-specific policies, we need a way to explicitly probe what an agent has inferred about the environment’s underlying dynamics.
+
+We call such probes environment-level queries: questions whose answers depend on properties of the entire environment dynamics, rather than a trajectory of an agent’s interaction with the environment. Examples include: (1) inferring what will happen behind an occlusion, (2) detecting changes in the environment’s dynamics, and (3) determining if a state is reachable from another. To assess agent’s world-model learning capabilities, we should present the query explicitly and treat the agent’s response as a direct measure of what aspects of the environment’s dynamics it has learned.
+
+Existing efforts to evaluate world-model learning, including RL-based benchmarks, only partially assess such capabilities. Cognitive-science-style benchmarks such as Bongard problems and the ARC challenge (Depeweg et al., 2018; Chollet, 2019) assess the ability to infer hidden rules from static examples, which are fundamentally environment-level queries about the underlying non-interactive environment. However, they do not test an agent’s ability to learn structure through exploration. Conversely, interactive benchmarks such as DiscoveryWorld (Jansen et al., 2024) and CLEVRER variants (Yi et al., 2020b) allow exploration but constrain answers to symbolic logics, code programs, or natural-language descriptions. Symbolic formats restrict the agent’s input–output interface and hinder fair comparison across different agent types, including humans. Natural-language answers are informal and impractical for automated evaluation.
+
+These limitations motivate the central question of this work: What is an evaluation framework for assessing world-model learning in interactive environments that supports environment-level queries without imposing constraints on the agent’s output representations?
+
+##### Our Approach
+
+We introduce WorldTest, a behavior-based world-model evaluation framework for probing environment-level queries. It consists of two phases: interaction and test. In the interaction phase, the agent interacts with the base environment without external rewards. In the test phase, the framework transforms the base environment into a derived challenge environment with an explicit objective that differs from—but remains correlated with—the base environment. WorldTest evaluates the agent based on its ability to achieve this objective in the challenge environment.
+
+WorldTest offers three advantages over existing methods: (1) WorldTest scores only an agent’s behavior in a challenge environment, without inspecting or constraining its internal representations, which minimally captures action-conditioned dynamics without committing to specific formats such as natural-language, enabling fair and automatic evaluation. (2) The interaction phase is goal-free, i.e., the agent does not optimize any specific reward function. (3) The test phase measures how well the agent uses its learned world model to solve a new, related challenge environment. Unlike RL-based approaches that restrict rewards in the original environment, this framework evaluates world-learning by introducing novel challenges. It can cover a broad range of environment-level queries about the environment dynamics that were previously impossible under RL-based benchmarks.
+
+Figure 1: Overview of the WorldTest framework and the AutumnBench instantiation. Agents first interact with an environment without external rewards to build a world model, then are evaluated on a derived challenge. Top-left box shows the 9 example AutumnBench environments. Yellow notes in the middle explain the key UI elements in the human interface of AutumnBench.
+
+We further instantiate WorldTest by AutumnBench, a benchmark consisting of 43 grid-world environments and three types of challenges for each environment. The three challenges mirror the capabilities in our cooking example:
+
+•
+
+Masked-frame prediction (MFP), where the agent infers unobserved parts of a final observation given a masked trajectory, analogous to predicting cooking completion time from partially observable information.
+
+•
+
+Change detection (CD), where the agent identifies a change in the dynamics of the environment and reports the earliest timestep where the observation differs from the expected observation in the original environment, similar to recognizing changes in a different kitchen.
+
+•
+
+Planning, where the agent acts to achieve a goal state, similar to sequencing recipe steps.
+
+We provide 129 tasks across all environments that cover essential world-model skills, including prediction, planning, and counterfactual reasoning. These tasks are not exhaustive, and we designed AutumnBench to be extensible. Example extensions include new grid worlds with non-Newtonian physics or tests for tool reuse and analogical reasoning. For example, an agent might be tested to see if it can recognize that a wine bottle can substitute for a rolling pin when one is unavailable. Finally, we validate AutumnBench with an empirical study involving 517 humans and three state-of-the-art AI models, showing that it reveals the gap between AI and humans in world-model learning.
+
+##### Contributions
+
+We present the following contributions:
+
+•
+
+We propose WorldTest, the first theoretical world-model learning assessment framework that is interaction-centric and supports environment-level queries about the learned world model.
+
+•
+
+We release AutumnBench, an instantiation of WorldTest with 43 interactive environments and three challenge families, resulting in 129 tasks. AutumnBench is designed following the desiderata for novel games outlined in Ying et al. (2025), is easily extensible, and supports automated evaluation for both human and AI models to accelerate progress in world-model learning.
+
+•
+
+We evaluate 517 human participants and three state-of-the-art reasoning models (Anthropic Claude, OpenAI o3, and Google Gemini 2.5 Pro) on AutumnBench. We analyze their interaction trajectories and performance on challenge tasks, revealing substantial headroom for the reasoning models.
+
+In the remainder of the paper, Section˜2 reviews related work around addressing the core challenge of environment-level queries, Section˜3 provides background on the Autumn language, which is used for defining the environments, and the Partially Observed Markov Decision Process (POMDP) formulation of the environments in WorldTest and AutumnBench. Section˜4 describes the core WorldTest framework and AutumnBench. Section˜5 presents evaluations and analysis of the baseline agents on AutumnBench. Finally, Section˜6 concludes and discusses future work.
+
+Table 1: Comparison of benchmarks in the literature. MDP refers to Markov Decision Process, DET-POMDP refers to Deterministic-Partially Observable Markov Decision Process, and POMDP refers to Partially Observable Markov Decision Process. POMDP is the most general type of environment.
+
+| Benchmark | Environment | Not | Not | Modified |
+| --- | --- | --- | --- | --- |
+| Representation-Based | Gym-like | Test Environment |
+| VBench Huang et al. (2024) | Static | $\times$ | ✓ | ✓ |
+| SVIB Kim et al. (2023) | Static | $\times$ | ✓ | ✓ |
+| CLEVRER Yi et al. (2020a) | Static | $\times$ | ✓ | ✓ |
+| ACRE Zhang et al. (2020) | Static | ✓ | ✓ | ✓ |
+| RAVEN Zhang et al. (2019) | Static | ✓ | ✓ | ✓ |
+| PGM Barrett et al. (2018) | Static | ✓ | ✓ | ✓ |
+| BONGARD-LOGO Depeweg et al. (2018) | Static | ✓ | ✓ | ✓ |
+| ARC-AGI Chollet (2019) | Static | ✓ | ✓ | ✓ |
+| PUZZLES Estermann et al. (2024) | MDP | ✓ | $\times$ | ✓ |
+| Procgen Cobbe et al. (2019) | DET-POMDP | ✓ | $\times$ | ✓ |
+| DiscoveryWorld Jansen et al. (2024) | POMDP | $\times$ | ✓ | ✓ |
+| Alchemy Wang et al. (2021) | POMDP | ✓ | $\times$ | $\times$ |
+| CausalWorld Ahmed et al. (2021) | POMDP | ✓ | $\times$ | $\times$ |
+| PHYRE Bakhtin et al. (2019) | POMDP | ✓ | $\times$ | ✓ |
+| NetHack Küttler et al. (2023) | POMDP | ✓ | $\times$ | $\times$ |
+| MiniHack Samvelyan et al. (2021) | POMDP | ✓ | $\times$ | $\times$ |
+| Atari Bellemare et al. (2013) | POMDP | ✓ | $\times$ | $\times$ |
+| URLB Laskin et al. (2021) | POMDP | ✓ | ✓ | $\times$ |
+| AutumnBench (Ours) | POMDP | ✓ | ✓ | ✓ |
+
+## 2 Related Works
+
+We categorize approaches to evaluating world-model learning into four non-exclusive bins, detailed in Table˜1. Each represents a different and incomplete way of posing environment-level qu

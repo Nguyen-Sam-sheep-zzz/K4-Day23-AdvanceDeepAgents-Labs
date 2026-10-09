@@ -1,0 +1,76 @@
+# Video Diffusion Models
+URL: https://arxiv.org/abs/2204.03458
+
+Video Diffusion Models
+
+arXiv is now an independent nonprofit! Learn more×
+
+# Video Diffusion Models
+
+Jonathan Ho Thanks: Equal contribution Email: jonathanho@google.com Tim Salimans11footnotemark: 1 Email: salimans@google.com Alexey Gritsenko Email: agritsenko@google.com William Chan Email: williamchan@google.com Mohammad Norouzi Email: mnorouzi@google.com David J. Fleet Email: davidfleet@google.com
+
+###### Abstract
+
+Generating temporally coherent high fidelity video is an important milestone in generative modeling research. We make progress towards this milestone by proposing a diffusion model for video generation that shows very promising initial results. Our model is a natural extension of the standard image diffusion architecture, and it enables jointly training from image and video data, which we find to reduce the variance of minibatch gradients and speed up optimization. To generate long and higher resolution videos we introduce a new conditional sampling technique for spatial and temporal video extension that performs better than previously proposed methods. We present the first results on a large text-conditioned video generation task, as well as state-of-the-art results on established benchmarks for video prediction and unconditional video generation. Supplementary material is available at https://video-diffusion.github.io/.
+
+## 1 Introduction
+
+Diffusion models have recently been producing high quality results in image generation and audio generation [28, 39, 40, 16, 23, 36, 48, 60, 42, 10, 29, e.g.], and there is significant interest in validating diffusion models in new data modalities. In this work, we present first results on video generation using diffusion models, for both unconditional and conditional settings.
+
+We show that high quality videos can be generated using essentially the standard formulation of the Gaussian diffusion model [46], with little modification other than straightforward architectural changes to accommodate video data within the memory constraints of deep learning accelerators. We train models that generate a fixed number of video frames using a 3D U-Net diffusion model architecture, and we enable generating longer videos by applying this model autoregressively using a new method for conditional generation. We additionally show the benefits of joint training on video and image modeling objectives. We test our methods on video prediction and unconditional video generation, where we achieve state-of-the-art sample quality scores, and we also show promising first results on text-conditioned video generation.
+
+## 2 Background
+
+A diffusion model [46, 47, 22] specified in continuous time [53, 48, 10, 28] is a generative model with latents $\mathbf{z}=\{\mathbf{z}_{t}\,|\,t\in[0,1]\}$ obeying a forward process $q(\mathbf{z}|\mathbf{x})$ starting at data $\mathbf{x}\sim p(\mathbf{x})$ . The forward process is a Gaussian process that satisfies the Markovian structure:
+
+| $\displaystyle q(\mathbf{z}_{t}|\mathbf{x})=\mathcal{N}(\mathbf{z}_{t};\alpha_{t}\mathbf{x},\sigma_{t}^{2}\mathbf{I}),\quad q(\mathbf{z}_{t}|\mathbf{z}_{s})=\mathcal{N}(\mathbf{z}_{t};(\alpha_{t}/\alpha_{s})\mathbf{z}_{s},\sigma_{t|s}^{2}\mathbf{I})$ | (1) |
+| --- | --- |
+
+where $0\leq s<t\leq 1$ , $\sigma^{2}_{t|s}=(1-e^{\lambda_{t}-\lambda_{s}})\sigma_{t}^{2}$ , and $\alpha_{t},\sigma_{t}$ specify a differentiable noise schedule whose log signal-to-noise-ratio $\lambda_{t}=\log[\alpha_{t}^{2}/\sigma_{t}^{2}]$ decreases with $t$ until $q(\mathbf{z}_{1})\approx\mathcal{N}(\mathbf{0},\mathbf{I})$ .
+
+##### Training
+
+Learning to reverse the forward process for generation can be reduced to learning to denoise $\mathbf{z}_{t}\sim q(\mathbf{z}_{t}|\mathbf{x})$ into an estimate $\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t},\lambda_{t})\approx\mathbf{x}$ for all $t$ (we will drop the dependence on $\lambda_{t}$ to simplify notation). We train this denoising model $\hat{\mathbf{x}}_{\theta}$ using a weighted mean squared error loss
+
+| $\displaystyle\mathbb{E}_{{\boldsymbol{\epsilon}},t}\!\left[w(\lambda_{t})\|\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t})-\mathbf{x}\|^{2}_{2}\right]$ | (2) |
+| --- | --- |
+
+over uniformly sampled times $t\in[0,1]$ . This reduction of generation to denoising can be justified as optimizing a weighted variational lower bound on the data log likelihood under the diffusion model, or as a form of denoising score matching [56, 47, 22, 28]. In practice, we use the ${\boldsymbol{\epsilon}}$ -prediction parameterization, defined as $\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t})=(\mathbf{z}_{t}-\sigma_{t}{\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t}))/\alpha_{t}$ , and train ${\boldsymbol{\epsilon}}_{\theta}$ using a mean squared error in ${\boldsymbol{\epsilon}}$ space with $t$ sampled according to a cosine schedule [37]. This corresponds to a particular weighting $w(\lambda_{t})$ for learning a scaled score estimate ${\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t})\approx-\sigma_{t}\nabla_{\mathbf{z}_{t}}\log p(\mathbf{z}_{t})$ , where $p(\mathbf{z}_{t})$ is the true density of $\mathbf{z}_{t}$ under $\mathbf{x}\sim p(\mathbf{x})$ [22, 28, 48]. We also train using the $\mathbf{v}$ -prediction parameterization for certain models [42].
+
+##### Sampling
+
+We use a variety of diffusion model samplers in this work. One is the discrete time ancestral sampler [22] with sampling variances derived from lower and upper bounds on reverse process entropy [46, 22, 37]. To define this sampler, first note that the forward process can be described in reverse as $q(\mathbf{z}_{s}|\mathbf{z}_{t},\mathbf{x})=\mathcal{N}(\mathbf{z}_{s};\tilde{\boldsymbol{\mu}}_{s|t}(\mathbf{z}_{t},\mathbf{x}),\tilde{\sigma}^{2}_{s|t}\mathbf{I})$ (noting $s<t$ ), where
+
+| $\displaystyle\tilde{\boldsymbol{\mu}}_{s|t}(\mathbf{z}_{t},\mathbf{x})=e^{\lambda_{t}-\lambda_{s}}(\alpha_{s}/\alpha_{t})\mathbf{z}_{t}+(1-e^{\lambda_{t}-\lambda_{s}})\alpha_{s}\mathbf{x}\quad\text{and}\quad\tilde{\sigma}^{2}_{s|t}=(1-e^{\lambda_{t}-\lambda_{s}})\sigma_{s}^{2}.$ | (3) |
+| --- | --- |
+
+Starting at $\mathbf{z}_{1}\sim\mathcal{N}(\mathbf{0},\mathbf{I})$ , the ancestral sampler follows the rule
+
+| $\displaystyle\mathbf{z}_{s}$ | $\displaystyle=\tilde{\boldsymbol{\mu}}_{s|t}(\mathbf{z}_{t},\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t}))+\sqrt{(\tilde{\sigma}^{2}_{s|t})^{1-\gamma}(\sigma^{2}_{t|s})^{\gamma}}{\boldsymbol{\epsilon}}$ | (4) |
+| --- | --- | --- |
+
+where ${\boldsymbol{\epsilon}}$ is standard Gaussian noise, $\gamma$ is a hyperparameter that controls the stochasticity of the sampler [37], and $s,t$ follow a uniformly spaced sequence from 1 to 0.
+
+Another sampler, which we found especially effective with our new method for conditional generation (Section 3.1), is the predictor-corrector sampler [48]. Our version of this sampler alternates between the ancestral sampler step 4 and a Langevin correction step of the form
+
+| $\displaystyle\mathbf{z}_{s}\leftarrow\mathbf{z}_{s}-\frac{1}{2}\delta\sigma_{s}{\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{s})+\sqrt{\delta}\sigma_{s}{\boldsymbol{\epsilon}}^{\prime}$ | (5) |
+| --- | --- |
+
+where $\delta$ is a step size which we fix to $0.1$ here, and ${\boldsymbol{\epsilon}}^{\prime}$ is another independent sample of standard Gaussian noise. The purpose of the Langevin step is to help the marginal distribution of each $\mathbf{z}_{s}$ generated by the sampler to match the true marginal under the forward process starting at $\mathbf{x}\sim p(\mathbf{x})$ .
+
+In the conditional generation setting, the data $\mathbf{x}$ is equipped with a conditioning signal $\mathbf{c}$ , which may represent a class label, text caption, or other type of conditioning. To train a diffusion model to fit $p(\mathbf{x}|\mathbf{c})$ , the only modification that needs to be made is to provide $\mathbf{c}$ to the model as $\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t},\mathbf{c})$ . Improvements to sample quality can be obtained in this setting by using classifier-free guidance [20]. This method samples using adjusted model predictions $\tilde{{\boldsymbol{\epsilon}}}_{\theta}$ , constructed via
+
+| $\displaystyle\tilde{{\boldsymbol{\epsilon}}}_{\theta}(\mathbf{z}_{t},\mathbf{c})=(1+w){\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t},\mathbf{c})-w{\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t}),$ | (6) |
+| --- | --- |
+
+where $w$ is the guidance strength, ${\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t},\mathbf{c})=\frac{1}{\sigma_{t}}(\mathbf{z}_{t}-\hat{\mathbf{x}}_{\theta}(\mathbf{z}_{t},\mathbf{c}))$ is the regular conditional model prediction, and ${\boldsymbol{\epsilon}}_{\theta}(\mathbf{z}_{t})$ is a prediction from an unconditional model jointly trained with the conditional model (if $\mathbf{c}$ consists of embedding vectors, unconditional modeling can be represented as $\mathbf{c}=\mathbf{0}$ ). For $w>0$ this adjustment has the effect of over-emphasizing the effect of conditioning on the signal $\mathbf{c}$ , which tends to produce samples of lower diversity but higher quality compared to sampling from the regular conditional model [20]. The method can be interpreted as a way to guide the samples towards areas where an implicit classifier $p(\mathbf{c}|\mathbf{z}_{t})$ has high likelihood, and is an adaptation of the explicit classifier guidance method proposed by [16].
+
+## 3 Video diffusion models
+
+Our approach to video generation using diffusion models is to use the standard diffusion model formalism described in Section 2 with a neural network architecture suitable for video data. Each of our models is trained to jointly model a fixed number of frames at a fixed spatial resolution. To extend sampling to longer sequences of frames or higher spatial resolutions, we will repurpose our models with a conditioning technique described later in Section 3.1.
+
+In prior work on image modeling, the standard architecture for $\hat{\mathbf{x}}_{\theta}$ in an image diffusion model is a U-Net [38, 44], which is a neural network architecture constructed as a spatial downsampling pass followed by a spatial upsampling pass with skip connections to the downsampling pass activations. The network is built from layers of 2D convolutional residual blocks, for example in the style of the Wide ResNet [65], and each such convolutional block is followed by a spatial attention block [55, 58, 11]. Conditioning information, such as $\mathbf{c}$ and $\lambda_{t}$ , is provided to the network in the form of an embedding vector added into each residual block (we find it helpful for our models to process these embedding vectors using several MLP layers before adding).
+
+We propose to extend this image diffusion model architecture to video data, given by a block of a fixed number of frames, using a particular type of 3D U-Net [13] that is factorized over space and time. First, we modify the image model architecture by changing each 2D convolution into a space-only 3D convolution, for instance, we change each 3x3 convolution into a 1x3x3 convolution (the first axis indexes video frames, the second and third index the spatial height and width). The attention in each spatial attention block remains as attention over space; i.e., the first axis is treated as a batch axis. Second, after each spatial attention block, we insert a temporal attention block that performs attention over the first axis and treats the spatial axes as batch axes. We use relative position embeddings [45] in each temporal attention block so that the network can distinguish ordering of frames in a way that does not require an absolute notion of video time. We visualize the model architecture in Fig. 1.
+
+Figure 1: The 3D U-Net architecture for $\hat{\mathbf{x}}_{\theta}$ in the diffusion model. Each block represents a 4D tensor with axes labeled as $\text{frames}\times\text{height}\times\text{width}\times\text{channels}$ , processed in a space-time factorized manner as described in Section 3. The input is a noisy video

@@ -1,0 +1,146 @@
+[
+  {
+    "n": 1,
+    "id": "https://export.arxiv.org/pdf/2210.17323v2.pdf",
+    "url": "https://export.arxiv.org/pdf/2210.17323v2.pdf",
+    "title": "GPTQ",
+    "date": "2022",
+    "source": "web"
+  },
+  {
+    "n": 2,
+    "id": "https://www.stat.berkeley.edu/~mmahoney/pubs/9485_QuantSpec_Self_Speculativ.pdf",
+    "url": "https://www.stat.berkeley.edu/~mmahoney/pubs/9485_QuantSpec_Self_Speculativ.pdf",
+    "title": "QuantSpec: Self-Speculative Decoding with Hierarchical Quantized KV Cache",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 3,
+    "id": "https://proceedings.neurips.cc/paper_files/paper/2024/file/4822991365c962105b1b95b1107d30e5-Paper-Conference.pdf",
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/4822991365c962105b1b95b1107d30e5-Paper-Conference.pdf",
+    "title": "Compact Language Models via Pruning and Knowledge Distillation",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 4,
+    "id": "https://arxiv.org/html/2502.02737v1",
+    "url": "https://arxiv.org/html/2502.02737v1",
+    "title": "SmolLM2: When Smol Goes Big — Data-Centric Training of a Small Language Model",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 5,
+    "id": "URL",
+    "url": "https://aclanthology.org/anthology-files/pdf/findings/2025.findings-emnlp.645.pdf",
+    "title": "Revisiting Pruning vs Quantization for Small Language Models",
+    "date": "2025-11-04",
+    "source": "web"
+  },
+  {
+    "n": 6,
+    "id": "2025.acl-long.718",
+    "url": "https://aclanthology.org/2025.acl-long.718/",
+    "title": "Demystifying Small Language Models for Edge Deployment",
+    "date": "2025-07",
+    "source": "web"
+  },
+  {
+    "n": 7,
+    "id": "2511.22334",
+    "url": "https://arxiv.org/abs/2511.22334",
+    "title": "Edge Deployment of Small Language Models, a comprehensive comparison of CPU, GPU and NPU backends",
+    "date": "2025-11-27",
+    "source": "web"
+  },
+  {
+    "n": 8,
+    "id": "https://arxiv.org/abs/2410.11305",
+    "url": "https://arxiv.org/abs/2410.11305",
+    "title": "QSpec: Speculative Decoding with Complementary Quantization Schemes",
+    "date": "2025-10-02",
+    "source": "web"
+  },
+  {
+    "n": 9,
+    "id": "2506.06579",
+    "url": "https://huggingface.co/papers/2506.06579",
+    "title": "Towards Efficient Multi-LLM Inference: Characterization and Analysis of LLM Routing and Hierarchical Techniques",
+    "date": "2025-06-06",
+    "source": "hf-search"
+  },
+  {
+    "n": 10,
+    "id": "2506.13404",
+    "url": "https://huggingface.co/papers/2506.13404",
+    "title": "A Technical Study into Small Reasoning Language Models",
+    "date": "2025-06-16",
+    "source": "hf-search"
+  },
+  {
+    "n": 11,
+    "id": "https://arxiv.org/pdf/2211.10438",
+    "url": "https://arxiv.org/pdf/2211.10438",
+    "title": "SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models",
+    "date": "2023",
+    "source": "web"
+  },
+  {
+    "n": 12,
+    "id": "https://aclanthology.org/2025.acl-industry.4.pdf",
+    "url": "https://aclanthology.org/2025.acl-industry.4.pdf",
+    "title": "DistilQwen2.5: Industrial Practices of Training Distilled Open Lightweight Language Models",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 13,
+    "id": "https://aclanthology.org/2025.emnlp-main.376.pdf",
+    "url": "https://aclanthology.org/2025.emnlp-main.376.pdf",
+    "title": "Teach Small Models to Reason by Curriculum Distillation",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 14,
+    "id": "https://arxiv.org/pdf/2410.17215",
+    "url": "https://arxiv.org/pdf/2410.17215",
+    "title": "MINIPLM",
+    "date": "",
+    "source": "web"
+  },
+  {
+    "n": 15,
+    "id": "2608.11045",
+    "url": "https://huggingface.co/papers/2608.11045",
+    "title": "ReRound: Reconstructive Rounding to Resolve Midpoint Ambiguity in Calibration-Free LLM Quantization",
+    "date": "2026-08-11",
+    "source": "hf-daily"
+  },
+  {
+    "n": 16,
+    "id": "2609.33601",
+    "url": "https://huggingface.co/papers/2609.33601",
+    "title": "JustQuant: You Don't Need Smoothing, SVD, or Rotation for 4-Bit Activation Quantization",
+    "date": "2026-09-27",
+    "source": "hf-search"
+  },
+  {
+    "n": 17,
+    "id": "2608.12307",
+    "url": "https://huggingface.co/papers/2608.12307",
+    "title": "AI4AI at Test-Time: Strong-to-Weak Capability Transfer via Harnesses",
+    "date": "2026-08-12",
+    "source": "hf-daily"
+  },
+  {
+    "n": 18,
+    "id": "2409.02060",
+    "url": "https://huggingface.co/papers/2409.02060",
+    "title": "OLMoE: Open Mixture-of-Experts Language Models",
+    "date": "2024-09-03",
+    "source": "hf-daily"
+  }
+]

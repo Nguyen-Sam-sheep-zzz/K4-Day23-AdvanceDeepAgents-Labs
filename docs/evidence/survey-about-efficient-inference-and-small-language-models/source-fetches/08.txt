@@ -1,0 +1,118 @@
+# QSpec: Speculative Decoding with Complementary Quantization Schemes
+URL: https://arxiv.org/abs/2410.11305
+Published: 2025-10-02
+
+QSpec: Speculative Decoding with Complementary Quantization Schemes
+
+# QSpec: Speculative Decoding with Complementary Quantization Schemes
+
+ Juntao Zhao Wenhao Lu Sheng Wang Lingpeng Kong Chuan Wu Affiliation: {juntaozh, whlu, u3009618}@connect.hku.hk, {lpk, cwu}@cs.hku.hk 
+
+###### Abstract
+
+Quantization is widely adopted to accelerate inference and reduce memory consumption in large language models (LLMs). While activation-weight joint quantization enables efficient low-precision decoding, it suffers from substantial performance degradation on multi-step reasoning tasks. We propose QSpec, a novel quantization paradigm that decouples efficiency from quality by integrating two complementary schemes via speculative decoding: low-precision joint quantization for fast drafting and high-precision weight-only quantization for accurate verification. QSpec reuses both weights and KV cache across stages, enabling near-zero-cost switching without retraining or auxiliary models. Compared to high-precision baselines, QSpec achieves up to $1.64×1.64\times$ speedup without quality degradation, and outperforms state-of-the-art speculative decoding methods by up to $1.55×1.55\times$ in batched settings. Furthermore, QSpec supports plug-and-play deployment and generalizes well across model scales, quantization methods, and workloads. These properties make QSpec a practical and scalable solution for high-fidelity quantized LLM serving under memory-constrained scenarios. Our code is available at https://github.com/hku-netexplo-lab/QSpec.
+
+## 1 Introduction
+
+Large language models (LLMs) have demonstrated remarkable abilities across various domains, including mathematics, coding, and planning (Shao et al., 2024; Guo et al., 2024a; Huang et al., 2024). Nonetheless, their immense scales pose substantial challenges for deployment due to high memory and computational demands, especially in resource-limited scenarios (e.g., inference on edge devices). Quantization has been an effective compression technique to facilitate LLM inference with limited resources (Lin et al., 2024a; Ashkboos et al., 2024; Zhao et al., 2024b; Lin et al., 2024b). By converting high-precision values (e.g., FP16) into their lower-precision counterparts (e.g., INT4), quantization effectively lowers memory and computational requirements, allowing for larger serving batches and model sizes. Furthermore, the reduced memory footprint boosts token generation throughput by accelerating the typically memory-bound autoregressive decoding process (Zhao et al., 2024a).
+
+Figure 1: Diagrams of different 4-bit quantization schemes. W4A16: uses 4-bit weight and 16-bit activation for inference. W4A4: further adopts 4-bit activation to utilize low-precision W4A4 kernels. QSpec: accelerates W4A16 by drafting tokens with W4A4 and verifying them with W4A16, and applies KV cache overwriting for consistent memory consumption. 
+
+Based on the quantized objects, recent quantization algorithms can be broadly classified into two categories: weight-only and WXAX: (1) Weight-only quantization, represented by W4A16 (Lin et al., 2024a), quantizes model weights to low precision (e.g., 4-bit) for storage, and then dequantizes them to a higher precision (i.e., FP16) during inference; (2) WXAX methods, such as W4A4 (Ashkboos et al., 2024; Zhao et al., 2024b) and W8A8 (Xiao et al., 2023), simultaneously quantize both weights and activations, and leverage low-precision hardware support for faster execution without dequantizing them to higher precision. Nevertheless, WXAX schemes generally suffer model performance degradation due to more low-precision activations used (as verified in Sec. 2). This poses a tough trade-off between efficacy and efficiency, raising the question:
+
+“Is there a quantization solution that boosts efficiency while avoiding efficacy degradation?”.
+
+Considering the comparable performance claims on recent W4A4 methods (Zhao et al., 2024b; Ashkboos et al., 2024), we first contend that their conclusions are biased due to limited evaluation tasks, and W4A4 still experiences significant performance drops when compared to their higher-precision activation counterparts. Specifically, while W4A4 schemes such as Atom (Zhao et al., 2024b) and QuaRot (Ashkboos et al., 2024) perform well on general tasks, such as PIQA (Bisk et al., 2020), Winogrande (Sakaguchi et al., 2019) and ARC Clark et al. (2018), they demonstrate notable performance declines in multi-step reasoning, particularly on mathematical and coding benchmarks (Xiong et al., 2024; Guo et al., 2024b) (shown in Table 1). This raises concerns about the comprehensiveness of evaluation and emphasizes the necessity of incorporating multi-step reasoning tasks into quantization assessment.
+
+To answer the above question, we draw inspiration from speculative decoding (Leviathan et al., 2023; Chen et al., 2023), which combines rapid drafting of a small model with high-fidelity verification from a larger model to boost throughput without sacrificing output quality. We propose a novel paradigm called QSpec, which employs complementary mixed-precision quantization execution to deliver flawless acceleration for high precision quantization. (i.e., efficiency improvements that preserve the fidelity and memory overhead of high-precision quantization).
+
+Our key insight is that a single weight-quantized model can losslessly toggle between two parallel activation modes: a fast, low-precision mode for drafting (e.g., W4A4) and a high-precision mode for verification (e.g., W4A16). As validated in Sec. 2.2, the token generation with different modes is highly similar. This allows us to adopt a lightweight ‘draft-verify’ scheme, as shown in Figure 1, where tokens drafted with W4A4 are selectively accepted by W4A16 with negligible switching costs. Unlike traditional speculative decoding that requires a draft model, QSpec shares weights and KV cache across activation modes, achieving zero extra memory overhead.
+
+We evaluate QSpec on a range of model sizes, quantization methods, and batch sizes. Compared to W4A16, QSpec offers up to $1.64×1.64\times$ higher token generation throughput while preserving fidelity. It also effectively compensates for up to 51.11% quality loss observed in W4A4 on challenging multi-step reasoning tasks such as MATH (Hendrycks et al., 2021). Furthermore, QSpec requires no training and can be directly integrated into existing inference pipelines.
+
+Our main contributions are summarized as follows:
+
+1. •
+
+We demonstrate that multi-step reasoning tasks are more sensitive to quantization-induced quality degradation than standard benchmarks, and advocate their inclusion for more comprehensive evaluation.
+2. •
+
+We validate and instantiate the feasibility of switching between two quantization schemes of a shared weight-quantized model, as well as their high token-level similarities, illuminating future development of quantization schemes.
+3. •
+
+We introduce QSpec, the first quantization paradigm that decouples efficiency from quality by combining complementary quantization schemes through speculative decoding with shared weights and KV cache.
+4. •
+
+Experiments across various models and tasks reveal that QSpec achieves up to $1.64×1.64\times$ acceleration without quality loss, making it well-suited for high-fidelity deployment in memory-constrained scenarios.
+
+### 2.1 Compromised Performance of Activation Quantization
+
+State-of-the-art (SOTA) activation-weight joint quantization methods, like Atom (Zhao et al., 2024b) and QuaRot (Ashkboos et al., 2024), achieve notable speed-ups with negligible performance loss compared to weight-only ones. However, we argue that this conclusion is skewed by limited evaluation benchmarks, which fail to capture the negative impacts of activation quantization.
+
+Table 1: Performance of Atom-based quantization schemes with different weight and activation precision across diverse tasks. “Acc”, “PPL” and “EM” stand for accuracy, perplexity, and exact match, respectively, with arrows indicating their positive trends. “W16A16” refers to standard FP16 inference, where both weights and activations are represented in FP16 precision.
+
+Task
+
+Metric
+
+W16A16
+
+Quantization
+
+Atom (W4A16)
+
+Atom (W4A4)
+
+WikiText-2
+
+PPL $↓\downarrow$
+
+7.73
+
+7.87 (+0.15%)
+
+8.58 (+0.85%)
+
+PIQA (10-shot)
+
+EM $↑\uparrow$
+
+78.6
+
+77.5 (-1.40%)
+
+75.6 (-3.81%)
+
+MBPP (0-shot)
+
+EM $↑\uparrow$
+
+42.0
+
+41.5 (-1.19%)
+
+30.5 (-27.38%)
+
+GSM8K (8-shot)
+
+EM $↑\uparrow$
+
+79.0
+
+73.4 (-7.09%)
+
+54.2 (-31.39%)
+
+To substantiate this claim, we conduct experiments on Llama-3-8B-Instruct models (Dubey et al., 2024) quantized with W16A16, W4A16, and W4A4 across four benchmarks: PIQA (Bisk et al., 2020), WikiText-2 (Merity et al., 2016), GSM8K (Cobbe et al., 2021), and MBPP (Austin et al., 2021). While PIQA and WikiText-2 are commonly used in quantization evaluation, GSM8K and MBPP involve multi-step reasoning, which remains underexplored in the quantization context despite its great importance. Detailed descriptions of the benchmarks are provided in Appendix B.
+
+As listed in Table 1, Atom-based quantization schemes show comparable performance to W16A16 across commonly adopted tasks such as on PIQA and WikiText-2, aligning with the claims in Zhao et al. (2024b). However, W4A4 suffers a nearly 30% average performance decline on complex reasoning tasks (i.e., MBPP and GSM8K), whereas W4A16 only experiences about 4%. This indicates that activation quantization leads to several times more performance degradation on multi-step reasoning tasks, despite the improved efficiency. Besides, the performance trend observed on multi-step reasoning tasks shows a stronger correlation with quantization precision than perplexity does, validating their adequacy in evaluation.
+
+In summary, activation quantization still incurs significant performance loss on more advanced multi-step reasoning tasks. This necessitates the inclusion of them in quantization evaluation for a more comprehensive assessment. Furthermore, this also underscores the demand for a quality-preserving yet efficient quantization paradigm.
+
+### 2.2 High-Similarity Token Predictions
+
+Despite the notable performance decline caused by activation quantization, we observe, more microscopically, high similarity in top-1 token predictions between quantization schemes with high and low precision activations. Specifically, we first employ Atom-based W4A16 greedy sampling to generate the golden token sequences for the GSM8K test set, obtaining the prediction probabilities for each top-1 answer token. Subsequently, we perform one Atom-based W4A4 forward pass (i.e., prefill) on the concatenated input of each question and its corresponding golden answer to acquire the token probabilities as well. This allows us to assess the prediction discrepancy between W4A4 and W4A16. As illustrated in Figure 2, we observe that (1) the majority of token prediction probabilities of both W4A4 and W4A16 exceed 80%, and most of the tokens associated with high probabilities are accepted. (2) Compared to accepted tokens, the number of rejected ones is negligible, underscoring the high similarity between the two quantization methods.
+
+Figure 2: Scatter plot of token prediction probabilities for Atom-based W4A4 and W4A16 on GSM8K test set, along with their two-dimensional and marginal probability distributions. A striking similarity between the two quantization schemes is observed, laying the foundation of QSpec.
+
+Combined with the analysis in Sec. 2.1, this can be interpreted that a small set of salient token variations can trigger a snowball effect of errors, especially on multi-step reasoning tasks where the subsequent steps are closely conditioned on the previous ones, akin to findings in Zhang et al. (2023), thus impairing the performance of the low-precision activation scheme. Prior 

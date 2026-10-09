@@ -1,0 +1,115 @@
+{
+  "date_utc": "2026-10-09T12:28:21.367711+00:00",
+  "report_artifacts": 15,
+  "reports": [
+    {
+      "topic": "survey about world model",
+      "stem": "survey-about-world-model",
+      "n_sources": 14,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "researcher_requests": 7,
+      "successful_researchers": 4,
+      "successful_checkers": 1,
+      "parallel_batch": 3,
+      "citation_problems": []
+    },
+    {
+      "topic": "survey about reinforcement learning for LLM reasoning",
+      "stem": "survey-about-reinforcement-learning-for-llm-reasoning",
+      "n_sources": 12,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "researcher_requests": 3,
+      "successful_researchers": 3,
+      "successful_checkers": 1,
+      "parallel_batch": 3,
+      "citation_problems": []
+    },
+    {
+      "topic": "survey about LLM agents and tool use",
+      "stem": "survey-about-llm-agents-and-tool-use",
+      "n_sources": 11,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "researcher_requests": 3,
+      "successful_researchers": 3,
+      "successful_checkers": 1,
+      "parallel_batch": 3,
+      "citation_problems": []
+    },
+    {
+      "topic": "survey about video and multimodal generation",
+      "stem": "survey-about-video-and-multimodal-generation",
+      "n_sources": 12,
+      "source_families": [
+        "arxiv",
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "researcher_requests": 7,
+      "successful_researchers": 4,
+      "successful_checkers": 1,
+      "parallel_batch": 3,
+      "citation_problems": []
+    },
+    {
+      "topic": "survey about efficient inference and small language models",
+      "stem": "survey-about-efficient-inference-and-small-language-models",
+      "n_sources": 18,
+      "source_families": [
+        "hf-daily",
+        "hf-search",
+        "web"
+      ],
+      "researcher_requests": 6,
+      "successful_researchers": 4,
+      "successful_checkers": 1,
+      "parallel_batch": 3,
+      "citation_problems": []
+    }
+  ],
+  "sha256": {
+    "reports/survey-about-world-model.md": "972144389dd1fbc6156a0750af440f1f411f092136f3ebe6597202aceab01eb7",
+    "reports/survey-about-world-model.sources.json": "b83098de7ba61ab2917ea27e5bbfbb8c5489d1f9e8a9c5bcb701f7269e5fa135",
+    "reports/survey-about-world-model.meta.json": "173f0156bf2516c7f580e06a5dd095fb29fbe677660bf7060d4b5784cf9c92ef",
+    "reports/survey-about-reinforcement-learning-for-llm-reasoning.md": "52774335f83636297519df33865da83a94c3b00a2c9e36e1efb2bbc968f5c747",
+    "reports/survey-about-reinforcement-learning-for-llm-reasoning.sources.json": "98a5bb2dfabd418842edb5b6eb2eb30e2db97edcb8c69ede20866698138bee8c",
+    "reports/survey-about-reinforcement-learning-for-llm-reasoning.meta.json": "08db098797cef8cf126ad1c83a8373b6d9b4afee204b709a4865ce1948cb799f",
+    "reports/survey-about-llm-agents-and-tool-use.md": "dce95b21b43fbe49b4eff4026e2fd4a26bb95452479cb47427a704b824540bfb",
+    "reports/survey-about-llm-agents-and-tool-use.sources.json": "3fb6a4b56b897e53f54f951ff95e8b2a0018721151dc9e833b4445237e5f5105",
+    "reports/survey-about-llm-agents-and-tool-use.meta.json": "2835de7051c8a8be456288c8d050e44f767624aa469ae9ad919a4fdb0cc48d7b",
+    "reports/survey-about-video-and-multimodal-generation.md": "09513fc81e56b2e7ac7d465ae87f533dd380606a30f29494253ef425f161bad8",
+    "reports/survey-about-video-and-multimodal-generation.sources.json": "0c9fb040802016036bb46d4f021549bb352e337871f0f995d4c6a6723c08ff2a",
+    "reports/survey-about-video-and-multimodal-generation.meta.json": "c85708013688442ac4f70cf250a21fb44a93046adb18aa04506f7220061205d2",
+    "reports/survey-about-efficient-inference-and-small-language-models.md": "6d71345e98cfca107d7b9a00cfad09b4f47ca34be54cef9cb83dee54f4474a2a",
+    "reports/survey-about-efficient-inference-and-small-language-models.sources.json": "6e99a20d0ee469248efe09ad6c3ae1eeae6832c143863b8e61b532990bc51607",
+    "reports/survey-about-efficient-inference-and-small-language-models.meta.json": "0b02abc659d09d171d2697c104bb4a0fe0d6178ef66f66d06e566b9776d91f10"
+  },
+  "provided_files_changed": [],
+  "candidate_files_scanned": 143,
+  "candidate_secret_flags": [],
+  "history_secret_flag": false,
+  "sandbox_containers_remaining": [],
+  "delivery": "local changes only; not committed or pushed",
+  "reports_changed_after_audit": [],
+  "tests_passed": 72,
+  "pip_check": "passed",
+  "self_check": "passed",
+  "remote_public": true,
+  "remote_default_branch": "main",
+  "remote_report_artifacts": 0
+}

@@ -1,0 +1,90 @@
+[
+  {
+    "n": 1,
+    "id": "2210.03629",
+    "url": "https://arxiv.org/abs/2210.03629",
+    "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+    "date": "2023-03-10",
+    "source": "web"
+  },
+  {
+    "n": 2,
+    "id": "2302.04761",
+    "url": "https://arxiv.org/abs/2302.04761",
+    "title": "Toolformer: Language Models Can Teach Themselves to Use Tools",
+    "date": "2023-02-09",
+    "source": "web"
+  },
+  {
+    "n": 3,
+    "id": "2205.00445",
+    "url": "https://arxiv.org/abs/2205.00445",
+    "title": "MRKL Systems: A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning",
+    "date": "2022-05-01",
+    "source": "web"
+  },
+  {
+    "n": 4,
+    "id": "2506.08119",
+    "url": "https://arxiv.org/abs/2506.08119",
+    "title": "SOP-Bench: Complex Industrial SOPs for Evaluating LLM Agents",
+    "date": "2025-06-09",
+    "source": "arxiv"
+  },
+  {
+    "n": 5,
+    "id": "2509.01560",
+    "url": "https://huggingface.co/papers/2509.01560",
+    "title": "In-N-Out: A Parameter-Level API Graph Dataset for Tool Agents",
+    "date": "2025-12-30",
+    "source": "hf-search"
+  },
+  {
+    "n": 6,
+    "id": "2508.20453",
+    "url": "https://www.emergentmind.com/papers/2508.20453",
+    "title": "MCP-Bench: Benchmarking Tool-Using LLM Agents with Complex Real-World Tasks via MCP Servers",
+    "date": "2025-08-28",
+    "source": "web"
+  },
+  {
+    "n": 7,
+    "id": "2501.12851",
+    "url": "https://huggingface.co/papers/2501.12851",
+    "title": "ACEBench: Who Wins the Match Point in Tool Usage?",
+    "date": "2025-01-22",
+    "source": "hf-search"
+  },
+  {
+    "n": 8,
+    "id": "2412.14161",
+    "url": "https://huggingface.co/papers/2412.14161",
+    "title": "TheAgentCompany: Benchmarking LLM Agents on Consequential Real World Tasks",
+    "date": "2024-12-18",
+    "source": "hf-daily"
+  },
+  {
+    "n": 9,
+    "id": "2506.10953",
+    "url": "https://huggingface.co/papers/2506.10953",
+    "title": "Build the web for agents, not agents for the web",
+    "date": "2025-06-12",
+    "source": "hf-daily"
+  },
+  {
+    "n": 10,
+    "id": "2604.14683",
+    "url": "https://huggingface.co/papers/2604.14683",
+    "title": "DR³-Eval: Towards Realistic and Reproducible Deep Research Evaluation",
+    "date": "2026-04-16",
+    "source": "hf-daily"
+  },
+  {
+    "n": 11,
+    "id": "2412.14470",
+    "url": "https://huggingface.co/papers/2412.14470",
+    "title": "Agent-SafetyBench: Evaluating the Safety of LLM Agents",
+    "date": "2024-12-19",
+    "source": "hf-search"
+  }
+]

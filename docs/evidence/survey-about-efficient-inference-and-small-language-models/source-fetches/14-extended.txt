@@ -1,0 +1,802 @@
+# (no title)
+URL: https://arxiv.org/pdf/2410.17215
+
+Published as a conference paper at ICLR 2025
+MINIPLM: KNOWLEDGE DISTILLATION FOR PRETRAINING LANGUAGE MODELS
+Yuxian Gu1,2∗, Hao Zhou2, Fandong Meng2, Jie Zhou2, Minlie Huang1†
+1The CoAI Group, Tsinghua University 2WeChat AI, Tencent Inc., China
+ABSTRACT
+Knowledge distillation (KD) is widely used to train small, high-performing student
+language models (LMs) using large teacher LMs. While effective in fine-tuning,
+KD during pre-training faces efficiency, flexibility, and effectiveness issues. Existing methods either incur high computational costs due to online teacher inference,
+require tokenization matching between teacher and student LMs, or risk losing
+the difficulty and diversity of the teacher-generated training data. In this work, we
+propose MINIPLM, a KD framework for pre-training LMs by refining the training
+data distribution with the teacher LM’s knowledge. For efficiency, MINIPLM
+performs offline teacher inference, allowing KD for multiple student LMs without
+adding training costs. For flexibility, MINIPLM operates solely on the training
+corpus, enabling KD across model families. For effectiveness, MINIPLM leverages the differences between large and small LMs to enhance the training data
+difficulty and diversity, helping student LMs acquire versatile and sophisticated
+knowledge. Extensive experiments demonstrate that MINIPLM boosts the student
+LMs’ performance on 9 common downstream tasks, improves language modeling capabilities, and reduces pre-training computation. The benefit of MINIPLM
+extends to larger training scales, evidenced by the scaling curve extrapolation.
+Further analysis reveals that MINIPLM supports KD across model families and
+enhances the pre-training data utilization. Our code, data, and models can be found
+at https://github.com/thu-coai/MiniPLM.
+2.2x
+(a) Computation Scaling (1.8B → 500M)
+200M 500M 1.2B
+Student Model Size
+40
+42
+44
+46
+Average Accuracy (%)
+Vanilla KD
+MiniPLM (Ours)
+(b) Model Size Scaling
+Figure 1: Computation (a) and model size (b) scaling curves of student LMs pre-trained from scratch
+with Vanilla KD1and MINIPLM. The teacher LM has 1.8B parameters. “1.8B→500M” means we
+use a 500M student LM. Training-time computation is kept constant for LMs of the same size in
+model scaling. The y-axis represents the LMs’ zero-shot performance on 9 downstream NLP tasks.
+1 INTRODUCTION
+Recent advances in language models (LMs; Han et al., 2021; Bommasani et al., 2021; OpenAI,
+2023; Touvron et al., 2023a) have largely been driven by scaling up model sizes, but this comes
+with high inference costs for deployment. At the same time, training small, deployment-friendly
+LMs faces training computation challenges, as small models are typically far from compute-optimal
+∗Contribution during an internship at Tencent Inc. ⟨guyx21@mails.tsinghua.edu.cn⟩
+†Corresponding author.
+1Vanilla KD (Sanh et al., 2019; Muralidharan et al., 2024) minimizes the token-level forward Kullback-Leibler
+divergence between the output distributions of the teacher LM and student LM.
+1
+arXiv:2410.17215v3 [cs.CL] 19 Mar 2025
+Published as a conference paper at ICLR 2025
+configurations according to Scaling Laws (Hoffmann et al., 2022). This has spurred a growing interest
+in exploring the limits of small LMs under the constraint of pre-training computation (Lu et al., 2024).
+Controlled
+Training Steps
+Controlled
+Training-Time FLOPs
+39
+40
+41
+Average Accuracy (%) 
+ on Downstream Tasks
+Vanilla KD (Online)
+MiniLLM (Online)
+SeqKD (Offline)
+Pre-Train w/o KD
+Figure 2: Results of applying KD methods in fine-tuning to pre-train a 200M
+student LM, using a 1.8B teacher LM.
+See Section 3.1 for method and evaluation details. When the training FLOPs
+are controlled, all KD methods perform
+similar or worse than Pre-Train w/o KD.
+Knowledge Distillation (KD; Hinton et al., 2015), where
+a small student LM learns from a large teacher LM, is
+a promising approach for training high-performing small
+LMs. While KD is effective for fine-tuning (Xu et al.,
+2024), its role in improving pre-training, the critical stage
+for LMs to acquire foundation knowledge, remains underexplored. Applying KD during pre-training with the methods in fine-tuning stages is non-trivial, which can be categorized as online KD and offline KD. In online KD, the
+teacher LM has to perform inference during pre-training
+to provide token-level probability supervision2(Sanh et al.,
+2019; Gu et al., 2024b), introducing additional trainingtime overhead. As shown in Figure 2, while online KD
+enhances performance within the same training steps, its
+benefits diminish if the extra computation was instead used
+to extend pre-training without KD. In addition, most online
+KD methods require the teacher and student LMs to share
+tokenization, limiting their flexibility for knowledge transfer across model families. Offline KD, on
+the other hand, avoids extra training-time computation and allows for KD across model families, as
+student LMs are trained on the data offline generated by the teacher (Kim & Rush, 2016; Gunasekar
+et al., 2023). However, ensuring sufficient difficulty and diversity in the generated data is challenging
+without extensive human expertise. Student LMs tend to overfit easy and common language patterns,
+hindering their downstream generalization (Shumailov et al., 2024), as shown in Figure 2.
+To address these challenges, we propose MINIPLM, an efficient, flexible, and effective KD framework for pre-training LMs, as illustrated in Figure 3. MINIPLM typically works in scenarios where
+the teacher LM’s probabilities are available to the users. Intuitively, it distills the teacher LM’s knowledge into the pre-training distribution through Difference Sampling, which samples training instances
+based on the “difference” between large and small LMs. Student LMs are then pre-trained from
+scratch on the refined distribution. To ensure efficiency, as shown in Figure 3(a), Difference Sampling
+performs offline teacher LM inference, allowing MINIPLM to distill knowledge into multiple student
+LMs without incurring additional training-time costs. For flexibility, MINIPLM operates solely
+on the training corpus, enabling KD across model families and ensuring seamless integration with
+highly optimized training pipelines (Chowdhery et al., 2022). In terms of effectiveness, Difference
+Sampling samples training instances that the teacher LM prefers but that a small reference LM assigns
+low probabilities to, promoting data difficulty and diversity. As depicted in Figure 3(b), this design
+down-samples easy and common patterns, up-samples hard and diverse instances, and filters out
+noisy or harmful data points from the pre-training corpus, which encourages student LMs to acquire
+versatile and sophisticated knowledge, ultimately improving downstream generalization.
+We apply MINIPLM to pre-train 200M, 500M, and 1.2B student LMs from scratch, using a 1.8B
+teacher LM. We show that MINIPLM surpasses various baselines in improving student LMs’ zeroshot performance on 9 widely used downstream tasks, enhancing language modeling capabilities, and
+reducing pre-training computation. By extrapolating the test loss with the Scaling Law (Hoffmann
+et al., 2022), we observe that MINIPLM’s benefit remains consistent for LMs trained on ~10T tokens.
+MINIPLM also facilitates KD across model families, improving Llama3.1 (Dubey et al., 2024) and
+Mamba (Gu & Dao, 2023) with a teacher LM from the Qwen family (Bai et al., 2023). Further
+analysis shows that MINIPLM enhances pre-training data utilization, reducing the data demand by
+2.4 times, which mitigates the quick exhaustion of web-crawled corpora (Villalobos et al., 2022).
+2 MINIPLM: KD FOR PRE-TRAINING LMS
+We consider pre-training an LM with an output distribution qθ on a large-scale corpus D consisting of
+N text sequences, where θ represents the model parameters. KD aids pre-training by incorporating
+2
+Pre-computing this supervision is impractical, as it requires 30PB of storage for 50B tokens with a 150K
+vocabulary. Therefore, teacher LM’s probabilities are typically computed online during the student LM training.
+2
+Published as a conference paper at ICLR 2025
+Cross-Entropy Loss 
+Student
+Teacher
+Reference !"#
+TopK log ( ()
+!"#() ∈ 
+1
+Offline Difference Sampling Pre-Training
+ ′
+(a) MINIPLM Training Framework
+Pre-training Corpus: 
+Difference-Sampled Corpus: ′
+Noisy and Harmful
+Removed
+Hard and Diverse
+Up-Sampled ⬆
+Easy and Common
+Down-Sampled ⬇
+(b) Effect of Difference Sampling
+Figure 3: MINIPLM. (a): Training framework. MINIPLM distills the knowledge of the teacher
+LM into the student LM by adjusting the pre-training corpus of the student LM (qθ) through offline
+Difference Sampling, based on the output probability discrepancy between the teacher LM (p) and a
+small reference LM (pref). (b): Illustration of the effect of Difference Sampling, which down-samples
+common easy instances, up-samples hard valuable instances, and removes noisy harmful instances.
+the knowledge of a teacher LM with output distribution p, and training θ to minimize the discrepancy
+between p and qθ (Sanh et al., 2019). MINIPLM formulates KD as a reward maximization problem (Haarnoja et al., 2017), which trains the student LM to generate diverse texts receiving high
+preference from the teacher LM (Section 2.1). To efficiently and effectively optimize the reward, as
+illustrated by Figure 3, MINIPLM employs Difference Sampling to refine the pre-training corpus
+(Section 2.2). This process improves the pre-training distribution in an offline manner with the teacher
+LM’s knowledge and preserves the data diversity and difficulty with the help of a small reference
+model. The student LM is then pre-trained from scratch on the refined corpus (Section 2.3).
+2.1 KD AS REWARD MAXIMIZATION
+Recent works (Gu et al., 2024b; Agarwal et al., 2024; Ko et al., 2024) have shown the effectiveness
+of minimizing the reverse Kullback-Leibler divergence (KLD) between p and qθ for KD of LMs in
+the fine-tuning stage, which avoids qθ from over-estimating the low-probability regions of p. We
+reformulate this objective as a reward maximizing problem (Haarnoja et al., 2017), which is suitable
+for designing efficient offline optimization methods (Levine et al., 2020):
+θ = arg min
+θ
+KL [qθ||p] = arg min
+θ
+Ex∼qθlog qθ(x)
+p(x)
+= arg max
+θ
+Ex∼qθr(p, qθ, x),
+(1)
+where the reward r is defined as r(p, qθ, x) = log p(x)
+qθ(x)
+. Intuitively, Eq. (1) trains qθ to generate text
+x that receives high reward values, indicating a preference from the teacher LM (i.e., high log p(x)
+values), while also ensuring high diversity (i.e., low Ex∼qθqθ(x) values). To optimize Eq. (1), a
+simple yet effective approach is Best-of-N (Stiennon et al., 2020; Bai et al., 2022; Touvron et al.,
+2023b), where a set Dqθcontaining M candidates is first sampled from qθ and K instances with the
+highest rewards are selected from these candidates to form a new dataset D′
+qθ
+:
+D
+′
+qθ = top-K{r(p, qθ, x)| x ∈ Dqθ
+}, (2)
+where Dqθ = {xm| xm ∼ qθ, 1 ≤ m ≤ M}. The student LM is then trained on D′
+qθ
+to learn to
+generate texts with large r(p, qθ, x) values. Although Best-of-N achieves performing the teacher
+LM’s inference prior to the student LM training similar to offline KD (Kim & Rush, 2016; Gunasekar
+et al., 2023), it still lacks the efficiency advantage of these methods because obtaining D′
+qθ
+requires
+(1) sampling data from qθ and (2) computing the reward values with qθ, making D′
+qθ
+nontransferable for pre-training other student LMs. It is also hard to ensure the diversity and difficulty
+of the M candidates sampled from qθ without careful prompt engineering with human expertise. In
+the following, we show that these issues can be effectively and efficiently addressed by Difference
+Sampling, which is the basis of the MINIPLM training algorithm.
+3
+Published as a conference paper at ICLR 2025
+2.2 DIFFERENCE SAMPLING
+As shown in Figure 3(a), Difference Sampling refines the pre-training corpus D based on the discrepancy between p and the output distribution pref from a tiny reference LM, which eliminates the
+dependency of Eq. (2) on qθ, making the sampled corpus reusable in training multiple student LMs.
+Top-K Sampling From D, not Dqθ. To avoid sampling data from qθ, we sample instances with
+high r(p, qθ, x) values from the pre-training corpus D, rather than from the Dqθgenerated by the
+student LM as in Eq. (2). This way, changing the student LM does not affect the candidate set, and D
+contains enough diverse and hard examples to be sampled for pre-training. The following proposition
+offers theoretical support for this approach, showing that the sampled training instances from Dqθ
+and D are highly likely to be the same when the sizes of Dqθand D are sufficiently large:
+Proposition 2.1. Let S be the sample space of two distributions p1 and p2, X1, X2, · · · , XN ∼ p1
+be N i.i.d random variables, and Y1, Y2, · · · , YM ∼ p2 be M i.i.d random variables. Let r(·) :
+S 7→ R be any injective function. Assume that ∀x ∈ S, p1(x) > 0, p2(x) > 0. For a fixed K
+satisfying 1 ≤ K ≤ min {N, M}, when N → +∞, M → +∞, we have
+P (top-K {r(Xn)| 1 ≤ n ≤ N} = top-K {r(Ym)| 1 ≤ m ≤ M}) → 1. (3)
+The proof of Proposition 2.1 is provided in Appendix A. Here, p1 represents the data distribution
+of D, p2 = qθ, which is the sampling distribution of Dqθ, and r(x) = r(p, qθ, x). Intuitively,
+Proposition 2.1 reveals that when |D| = N and |Dqθ| = M are sufficiently large, the top-K instances
+selected from both sets tend to overlap. This suits our scenario well, as D is typically large-scale, and
+it is advantageous to sample as many candidates from Dqθas possible to find high-reward instances.
+Decoupling the Student and the Reward-Computing LM. To avoid computing reward values
+with qθ, we replace it with pref, the output distribution of a tiny reference LM, typically smaller
+than the student LM, for reward computation. The reference LM is pre-trained on a small subset
+Dref, uniformly sampled from D, allowing pref to approximate qθ with minimal computation. This
+is a reasonable approximation because qθ evaluates the difficulty of instances, and the relative data
+difficulties generally remain consistent across different models (Ethayarajh et al., 2022). As a result,
+the reward function in Eq. (2) is replaced with r(p, pref, x) = log p(x)
+pref(x)
+. In Appendix D.3, we
+empirically show that r(p, pref, x) and r(p, qref, x) have high correlations.
+In summary, Difference Sampling constructs a pre-training corpus D′from D − Dref as follows:
+D
+′ = top-K
+
+log p(x)
+pref(x)
+
+
+
+
+x ∈ D − Dref
+, (4)
+which is independent of qθ. As shown in Figure 3(b), Difference Sampling essentially refines the data
+distribution of D by comparing the “difference” between p and pref, increasing difficulty and diversity
+while filtering out noise. A detailed discussion of these effects is provided in Section 2.5.
+2.3 PRE-TRAINING ON DIFFERENCE-SAMPLED CORPUS
+As illustrated in Figure 3(a), we pre-train the student LM from scratch on the difference-sampled
+corpus D′ with the cross-entropy loss for next-token prediction, which is similar to standard pretraining. The loss function L(qθ, D′
+) is given by
+L(qθ, D
+′
+) = −
+1
+|D′|
+X
+x∈D′
+1
+|x|
+X
+|x|
+t=1
+log qθ(xt|x<t), (5)
+where |x| is the length of x, xt is the t
+th token, and x  1, the equality of two top-K subsets requires the elements ranked
+from 1 to K to be equal, respectively. Therefore, the left hand of Eq. (3) can be decomposed using
+Bayes’s Law. Let X = {X1, X2, · · · , XN }, Y = {Y1, Y2, · · · , YM}, X∗ = arg max
+1≤n≤N
+r(Xn),
+and Y∗ = arg max
+1≤m≤M
+r(Ym), we have P(X∗ = Y∗) → 1 (Eq. (6)) and
+P (top-2 {r(Xn)| 1 ≤ n ≤ N} = top-2 {r(Ym)| 1 ≤ m ≤ M})
+=P
+
+arg max
+X∈X−{X∗}
+r(X) = arg max
+Y∈Y−{Y∗}
+r(Y)
+
+
+
+
+X∗ = Y∗
+
+P(X∗ = Y∗).
+(12)
+Since X1, X2, · · · , XN and Y1, Y2, · · · , YM are i.i.d. random variables, we can still decompose
+the term P
+
+arg max
+X∈X−{X∗}
+r(X) = x
+
+
+
+
+X∗ = Y∗
+
+as Eq. (9), which means when N, M → +∞:
+P
+
+arg max
+X∈X−{X∗}
+r(X) = arg max
+Y∈Y−{Y∗}
+r(Y)
+
+
+
+
+X∗ = Y∗
+
+→ 1. (13)
+Eq. (13) means the elements with the secondary large r(x) values are highly likely to be the same.
+The decomposition in Eq. (12) can be conducted K times for the elements ranked from 1 to K, and
+each decomposed term approaches 1 similar to Eq. (13). So far, we have proved that the probability
+of X and Y having the same top-K subsets measured by r(x) approaches to 1 when N, M → +∞,
+which is formally written as
+P (top-K {r(Xn)| 1 ≤ n ≤ N} = top-K {r(Ym)| 1 ≤ m ≤ M}) → 1. (14)
+This completes the proof of Proposition 2.1.
+B MORE EXPERIMENTAL DETAILS
+Model and Training Configurations. We mostly follow Brown et al. (2020) to set the model and
+learning rate configurations, as summarized in Table 6. The 500M, 1.8B, and 4B teacher models are
+the officially released Qwen-1.5 checkpoints 3and the 300M teacher model used in Section 3.5 to
+analysis the effect of teacher LM sizes Is pre-trained on 200B tokens from our pre-training corpus.
+We train all the LMs with the AdamW (Loshchilov & Hutter, 2019) optimizer, with β1 = 0.9,
+β2 = 0.98, and a 0.1 weight decay. We set the batch size to 512 and the max sequence length
+to 1,024, corresponding to 100K total training steps for roughly 50B tokens in Pre-Train w/o KD,
+SeqKD, and MINIPLM. For MiniLLM and Vanilla KD, we limit the training steps to align their
+training computation with Pre-Train w/o KD. Specifically, we assume the computation of a forward
+and backward pass are 2ND and 4ND, respectively, where N is the model size and D is the number
+of trained tokens. The training steps of MiniLLM and Vanilla KD are listed in Table 7. We linearly
+warm up the learning rate for 2K steps and apply cosine learning rate decay until 1/10 of the max
+values. All experiments are conducted on NVIDIA 40G A100 and NVIDIA 32G V100 GPUs.
+Configurations of KD Across Model Families The model configurations of LLaMA3.1 (Dubey
+et al., 2024) and Mamba (Gu & Dao, 2023) for the cross-family distillation experiments are listed in
+Table 6. The pre-training data and optimization hyper-parameters are the same as the configurations
+in our main experiments on Qwen, as listed above.
+Evaluation Details. Our downstream datasets for evaluation include Hellaswag (HS; Zellers
+et al., 2019), LAMBADA (LAM; Paperno et al., 2016), Winograde (Wino; Levesque et al., 2012),
+OpenbookQA (OBQA; Mihaylov et al., 2018), ARC-Easy/Challange (ARC-e/c; Clark et al., 2018),
+PIQA (Bisk et al., 2020), SIQA (Sap et al., 2019), and StoryCloze (Story; Mostafazadeh et al., 2016).
+We apply the LM-Eval-Harness (Gao et al., 2024)
+4
+framework to conduct zero-shot evaluation. We
+sample 10K documents from the DCLM (Li et al., 2024a) corpus to construct our test set for language
+modeling evaluation.
+19
+Published as a conference paper at ICLR 2025
+Family Size Vocab. dmodel dFFN nlayers nhead dhead learning rate
+Qwen
+104M 151,936 512 1,408 8 8 64 6 × 10−4
+200M 151,936 768 2,112 12 12 64 6 × 10−4
+300M 151,936 768 2,112 18 12 64 6 × 10−4
+500M 151,936 1,024 2,816 24 16 64 3 × 10−4
+1.2B 151,936 1,536 4,224 24 16 96 2.5 × 10−4
+LLaMA3.1 212M 128,000 768 3,072 12 12 64 6 × 10−4
+Vocab. dmodel dFFN nlayers conv rank learning rate
+Mamba 140M 50,280 768 1,536 24 4 48 3 × 10−3
+Table 6: Model configurations and corresponding learning rates.
+Vanilla KD MiniLLM
+Formula 3Nstu
+3Nstu+Ntch
+T
+3Nstu
+4Nstu+2Ntch
+T
+Student Model Size Nstu 200M 500M 1.2B 200M 500M 1.2B
+Training Steps 25K 45K 65K 15K 30K 40K
+Table 7: Training steps in Vanilla KD and MiniLLM, which is set to ensure training-time computation
+to be the same as Pre-Train w/o KD. Nstu and Ntch are model sizes of student and teacher LMs
+respectively. Ntch = 1.8B in our experiments. T = 100K is the training steps in Pre-Train w/o KD.
+C DISCUSSION ON RESOURCE CONSUMPTION
+In this section, we discuss the asymptotic complexity, actual runtime, and memory usage of different
+methods. Table C summarizes the offline computation requirements for Difference Sampling, which
+only need to be performed once for any LMs to be distilled from a specific teacher LM. Table C
+provides the training-time asymptotic complexity, actual runtime, and memory usage for various
+pre-training methods. For these results, we assume the LMs uses ZeRO-2 (Rajbhandari et al., 2020)
+and FP16 precision during training to calculate space complexity. The "Actual Time" and "Max
+Batch Size" metrics are derived from experiments conducted on 8 A100 80GB GPUs. We can see
+that the inference time of the teacher and reference LMs constitutes the majority of the runtime for
+Difference Sampling. This cost can be further reduced by leveraging a proxy model for sampling,
+as detailed in Appendix E. Regarding training-time resource consumption, MINIPLM requires the
+same time and memory as pre-training without KD, whereas Vanilla KD incurs significantly higher
+runtime and GPU memory usage due to the online inference of the teacher LM.
+D MORE RESULTS
+D.1 COMPUTATION SCALING CURVES OF MORE SIZES
+In Figure 7, we plot the scaling curves of average accuracy on the downstream tasks with respect to
+the pre-training FLOPs for student LMs with 200M and 1.2B parameters. We can see that MINIPLM
+saves pre-training computation for both student LM sizes and constantly outperforms Vanilla KD.
+D.2 TEST LOSSES EXTRAPOLATION WITH SCALING LAWS
+Data-Unlimited Setting. In Table 2, we follow Hoffmann et al. (2022) to fit the scaling law curves
+with the test losses on the DCLM corpus. Then, we used the fitted constants to predict the test losses
+for 1T and 10T training data in Pre-Train w/o KD and MINIPLM, and that for Vanilla KD when it
+3https://huggingface.co/Qwen
+4
+20
+Published as a conference paper at ICLR 2025
+Time Complexity Space Complexity Actual Time Max Batch Size
+Reference LM Training O(6NrefDref) O(3.75Nref) 2.6h 32
+Teacher LM Inference O(2NtchD) O(2Ntch) 68h 16
+Reference LM Inference O(2NrefD) O(2Nref) 7h 128
+Top-k Sampling O(D) - 10min -
+Table 8: Asymptotic complexity, actual time and memory use of Difference Sampling. Nref and Ntch
+are the reference and teacher model sizes. D and Dref are the sizes of the original corpus and the
+corpus for training the reference model. “Actual Time” is the running time of each stage. “Max Batch
+Size” represents the max single GPU batch size, which measures the memory use of each stage.
+Time Complexity Space Complexity Actual Time Max Batch Size
+Pre-Train O(6NstuD) O(3.75Nstu) 68h 16
+Vanilla KD O(6NstuD + 2NtchD) O(3.75Nref + 2Ntch) 139h 8
+MiniPLM O(6NstuD) O(3.75Nstu) 68h 16
+Table 9: Training-time asymptotic complexity, actual time and memory use of different pre-training
+methods. Nstu and Ntch are the student and teacher model sizes. D is the size of the pre-training
+corpus. “Actual Time” is the training time of each method. “Max Batch Size” represents the max
+single GPU batch size, which measures the memory use of each method. Unlike the setting in
+Section 3.1, we align the total training steps (token numbers D) of the three methods to compare their
+training-time complexities.
+consumes the same training FLOPs. Specifically, we consider the following power law:
+L(Nm, Nd) = Lirr +
+Am
+N
+αmm
++
+Ad
+N
+αd
+d
+(15)
+where Nm is the model sizes, Nd is the number of trained tokens, and Lirr is the irreducible test
+loss. Since the required computation C of training on a token of Vanilla KD and other methods are
+different, we re-write Eq. (15) using the fact that C ∝ NmNd for a fixed model size:
+L(C) = L∞ +
+Ac
+Cαc
+, (16)
+where L∞ and Ac depends on the model size Nm, and αc = αd. In this way, we can fit the loss
+curves in Figure 4 with Eq. (16). Table 10 includes the fitted values of L∞, Ac, and αc. We also
+include the total FLOPs of Pre-Train w/o KD and MINIPLM on 1T (C1T) and 10T (C10T) tokens,
+which Vanilla KD aligns with. The numbers in Table 10 can be computed with Eq. (16) and the
+constants in Table 10.
+Data-Limited Setting. In Section 3.4, we extrapolate the loss curve of Pre-Train w/o KD with the
+Data-Constrained Scaling Law (Muennighoff et al., 2023), which is almost the same as Eq. (15),
+except that Nd represents the total number of tokens in the pre-training corpus repeated 4 times, as
+suggested by Muennighoff et al. (2023). Therefore, after Nd is solved by letting the loss of Pre-Train
+w/o KD equal that of MINIPLM (α = 0.25, 4 Eps.), we divide the value by 4, resulting in a training
+tokens number of 118B. This means 68B extra training tokens are needed for Pre-Train w/o KD to
+achieve the performance of MINIPLM using 50B training tokens.
+D.3 ABLATION STUDY
+Impact of the Reference Model. In Figure 8, we show the impact of the reference model size on
+the performance of LMs trained with MINIPLM. We can see that larger reference models lead to
+better performance of MINIPLM, but the improvement saturates as the reference LM grows larger.
+Difference Sampling Ratio. In Figure 9, we plot the impact of the difference sampling ratio on the
+student LM’s performance in the data-unlimited setting. We can see that small sampling ratios result
+in better zero-shot accuracy on downstream tasks. However, to ensure that the difference-sampled
+data contains 50B tokens, we need a larger original corpus D. To control the computation overhead,
+we mainly use α = 0.5 in our experiments.
+21
+Published as a conference paper at ICLR 2025
+0.1 0.2 0.3 0.4 0.5 0.6
+Training Computation (×10
+20 FLOPs)
+35
+36
+37
+38
+39
+40
+41
+Average Accuracy (%)
+Pre-Train
+Vanilla KD
+MiniPLM (Ours)
+(a) 1.8B → 200M
+0.25 0.50 0.75 1.00 1.25 1.50
+Training Computation (×10
+20 FLOPs)
+38
+39
+40
+41
+42
+43
+44
+45
+Average Accuracy (%)
+Pre-Train
+Vanilla KD
+MiniPLM (Ours)
+(b) 1.8B → 500M
+0.5 1.0 1.5 2.0 2.5 3.0 3.5
+Training Computation (×10
+20 FLOPs)
+40
+42
+44
+46
+Average Accuracy (%)
+Pre-Train
+Vanilla KD
+MiniPLM (Ours)
+(c) 1.8B → 1.2B
+Figure 7: Computation scaling curves of student LMs when trained with Pre-Train w/o KD, Vanilla
+KD, and MINIPLM. The y-axis represents the average zero-shot accuracy on downstream tasks.
+Nstu Method Ac αc L∞ C1T (FLOPs) C10T (FLOPs)
+200M
+Pre-Train w/o KD 2.19×1070.41 3.30
+1.26×1021 1.26×1022 Vanilla KD 9.77×107
+0.44 3.34
+MINIPLM 8.56×1010 0.59 3.25
+500M
+Pre-Train w/o KD 2.73×108
+0.45 3.06
+3.14×1021 3.14×1021 Vanilla KD 3.14×108
+0.45 3.05
+MINIPLM 6.64×1090.52 3.03
+1.2B
+Pre-Train w/o KD 1.88×108
+0.43 2.91
+7.30×1021 7.30×1021 Vanilla KD 1.10×1010 0.52 2.90
+MINIPLM 4.29×1080.45 2.86
+Table 10: Scaling Law constants in Eq. (16) fitted using the loss curves in Figure 4. Nstu means the
+student LM size. C1T and C10T are the compute spent on processing 1T and 10T tokens in Pre-Train
+w/o KD and MINIPLM, which Vanilla KD aligns with.
+D.4 CORRELATIONS BETWEEN log p(x)
+pREF (x)
+AND log p(x)
+qθ(x)
+Nref Pearson Spearman Sampling Acc.
+45M 0.743 0.774 80.6
+104M 0.826 0.840 87.4
+200M 0.856 0.879 89.5
+Table 11: Correlations between log p(x)
+pref(x)
+and
+log p(x)
+qθ(x)
+. Nref represents the size of the reference model. qθ is generated from the 500M
+student LM. We report the Pearson/Spearman
+Correlation and the sampling accuracy (Sampling Acc.) of using log p(x)
+pref(x)
+.
+To examine how replacing qθ with pref in Difference
+Sampling works, we compute the correlations between log p(x)
+pref(x)
+(using 45M, 104M, and 200M LMs
+to generate pref) and log p(x)
+qθ(x)
+(using the 500M student LM to generate qθ) on a holdout set. Additionally, we calculate the sampling accuracy, which
+measures how many instances are correctly classified as selected or discarded when using log p(x)
+pref(x)
+and setting the sampling threshold to 0.5, with the
+selection using log p(x)
+qθ(x)
+serving as the ground truth.
+As shown in Table D.3, using pref achieves strong
+correlations with using qθ and high data sampling
+accuracy. This supports the rationale for using pref in
+Difference Sampling as described in Section 2.2.
+E DIFFERENCE SAMPLING WITH A PROXY MODEL
+Motivation. In this section, we show that the offline computational overhead of Difference Sampling
+can be further reduced by conducting teacher and reference LM inference on a small proxy dataset
+and then transferring the value r(p, pref, x) to the entire corpus D with a proxy model. Specifically,
+we first uniformly sample a proxy subset Dprx from D, satisfying |Dprx| ≪ |D|. Then, we compute
+the r(p, pref, x) value for each instance x in Dprx. Note that since |Dprx| ≪ |D|, the computational
+22
+Published as a conference paper at ICLR 2025
+45M 104M 200M
+Size of the Reference Model
+40.0
+40.5
+41.0
+Average Accuracy (%)
+MiniPLM
+Vanilla KD
+Figure 8: Impact of the reference model size. We
+use the 1.8B LM as the teacher and the 200M LM
+as the student. We report the average zero-shot
+accuracy on the downstream tasks of the LMs
+trained with MINIPLM and compare it with that
+of Vanilla KD.
+0.4 0.6 0.8
+40.0
+40.5
+41.0
+41.5
+Average Accuracy (%)
+MiniPLM
+Vanilla KD
+Figure 9: Impact of the difference sampling ratio α. We report the average zeroshot accuracy on the downstream tasks of
+the LMs trained with MINIPLM, using α ∈
+[0.3, 0.4, 0.5, 0.6, 0.7, 0.9] and compare it with
+that of Vanilla KD.
+overhead of teacher LM inference is significantly reduced. After that, we fine-tune a small proxy
+model on Dprx to fit the r(p, pref, x) values, which is used to infer the values for instances from D.
+Finally, the Top-K operation in Eq. (4) is based on the inferred values.
+Method. To test this approach, we uniformly sample a Dprx containing 0.1B tokens from the
+50B-token D. Computing log p(x)
+pref(x)
+values on Dprx takes only 0.2% computation of that on D. Then,
+we employ the reference LM as the proxy model and fine-tune it with the following regression loss:
+w∗, b∗, θ
+∗
+ref = arg min
+w,b,θref
+1
+|Dprx|
+X
+x∈Dprx
+
+w⊤h(x, θref) + b − r(p, pref, x)
+2
+, (17)
+Method FLOPs Acc.
+Vanilla KD Online 39.9
+MINIPLM 2 × 1020 41.3
+MINIPLMprx 9 × 1018 40.9
+Table 12: Offline FLOPs and average accuracy (Acc.) on downstream
+tasks of MINIPLM using a proxy
+model, compared with that of standard MINIPLM and Vanilla KD.
+where h(x, θref) ∈ Rdis the average output hidden states
+of the reference LM, with d representing the model’s hidden
+size and θref representing the parameters of the reference LM.
+w ∈ R
+d
+, b ∈ R are the parameters of a linear head outputting
+a scalar as the predicted r(p, pref, x) values, given the average
+hidden states. The inferred values on D are given by rˆ(x) =
+w∗⊤h(x, θ
+∗
+ref)+b
+∗
+. Since this inference process is based on the
+reference LM, it still saves computation compared to inference
+with the teacher LM. The difference-sampled corpus is then
+obtained by selecting K = α|D| instances from D with the
+highest rˆ(x) values.
+Results. We term this method as MINIPLMprx and compare its performance with Vanilla KD and
+MINIPLM in Table 12. We can see that MINIPLMprx requires much less inference computation
+compared to standard MINIPLM while still maintaining substantial improvement over Vanilla KD.
+F CASE STUDY
+We present a case study in Table 13, 14, and 15 to show the instances corresponding to the three parts
+of data distribution shown in Figure 3(b). The explanation of the three parts are list as follows:
+• p(x) ≳ pref(x): As shown in Table 13, the instances whose log p(x)
+pref(x)
+value is close to 0 is
+discarded (Instance #1 and #2). These instances are full of repeated patterns, which is easily
+learned by both the small and large LMs. Instance #3 is a dialog from a story, where the
+teacher LM learns slightly well than the student LM, which is retained for the student LM to
+23
+Published as a conference paper at ICLR 2025
+learn basic language skills. In this way, these easy and common patterns are down-sampled
+but not fully discarded.
+• p(x) ≫ pref(x): As shown in Table 14, the examples where p(x) is much larger than
+pref(x) is retained. These examples include long and knowledge-intensive documents
+(Instance #1), in-context learning examples (Instance #2), and high-quality codes (Instance
+#3). These examples reveals the key large LM’s advantage over the small LM, which should
+be up-sampled for the student LM to learn.
+• p(x) ≲ pref(x): As shown in Table 15, the instances where the larger LM learns worse than
+the small LM are all discarded. We can see that Instance #1 and Instance #2 are irregular
+noises, which will be harmful to the training of LMs. The small reference LM easily over-fits
+their surface patterns like symbols and numbers, while a more powerful large LM better
+recognizes their unnatural features. Instance #3 is a data collection in an academic paper,
+but lack of contexts, which is useless for LMs to learn the dependency in contexts. Note
+that these examples only accounts for 6.3% of the pre-training corpus before Difference
+Sampling, which is a quite small proportion.
+24
+Published as a conference paper at ICLR 2025
+p(x) ≳ pref(x): Easy and common instances
+Instance #1 − log p(x) = 1.24 − log pref(x) = 1.28 log p(x)
+pref(x) = 0.04 Discarded
+ 
+ 
+ 
+ 
+ 
+Instance #2 − log p(x) = 0.44 − log pref(x) = 0.51 log p(x)
+pref(x) = 0.07 Discarded
+{\sum\limits_{j = 1}ˆ{n - 1}\operatorname{size}\left(
+{\mathcal{X},j} \right) \cdot \operatorname{size}
+\left( {\mathcal{Z},n - j} \right)\quad} &
+{\mathcal{I} = \mathcal{M}_{1},} \\
+{\sum\limits_{j = 1}ˆ{n - 1}\operatorname{size}\left(
+{\mathcal{X},j} \right) \cdot \operatorname{size}
+\left( {\mathcal{X},n - j} \right)\quad} &
+{\mathcal{I} = \mathcal{M}_{2},} \\
+{\sum\limits_{j = 1}ˆ{n - 1}\operatorname{size}\left(
+{\mathcal{X},j} \right) \cdot \operatorname{size}
+\left( {\mathcal{A},n - j} \right)\quad} &
+{\mathcal{I} = \mathcal{M}_{3},} \\
+{\sum\limits_{j = 1}ˆ{n - 1}\operatorname{size}\left(
+{\mathcal{A},j} \right) \cdot \operatorname{size}
+\left( {\mathcal{Z},n - j} \right)\quad} &
+{\mathcal{I} = \mathcal{M}_{4},} \\
+Instance #3 − log p(x) = 2.83 − log pref(x) = 3.86 log p(x)
+pref(x) = 1.02 Selected
+"I felt bad for Coach Rod to have to deal with it,"
+said senior tight end Mike Massey, a St. Ignatius
+grad. "But for the players it was a non-issue. We
+didn’t even talk about it."
+But some other people in college football did.
+"[Boren] was a legacy guy and when he makes comments
+like [that], that’s like getting kicked square in the
+shorts when you’re Rich Rodriguez," ESPN analyst and
+former OSU quarterback Kirk Herbstreit said Thursday.
+"With all the other things that are happening, when
+you get that comment from a legacy guy, a guy whose
+dad started three or four years for Bo, all of a
+sudden everybody’s tentacles go up a little bit.
+Table 13: Easy and common instances down-sampled by Difference Sampling. Instance #1 and #2:
+HTML and LaTeX code data that contain repeated patterns, which is easy to fit by both the reference
+and teacher LM. Instance #3: Dialogues from a story, which is relative easy for LMs but are still
+selected by Difference Sampling to help student LMs learn basic language skills.
+25
+Published as a conference paper at ICLR 2025
+p(x) ≫ pref(x): Hard and valuable instances
+Instance #1 − log p(x) = 1.26 − log pref(x) = 4.20 log p(x)
+pref(x) = 2.94 Selected
+Legal along with Environmental Responsibility!
+Dumpster rentals in the user side may seem as
+fundamental as placing a phone, having a dumpster sent
+and hurling all your disposals inside to be carted
+away. Nonetheless, there are legal issues attached
+to appropriate disposal connected with certain products
+which tie up into environmental issues. The 10 Yard
+Dumpster For Rent in Pocahontas customer or perhaps
+demolition purchaser should be informed about these
+issues by means of careful screening so as to reduce a
+firm’s liability which inturn keeps a firm’s overhead
+all the way down and makes for prompt fall off, pick up
+along with disposal of the dumpster and it’s articles.
+Instance #2 − log p(x) = 2.36 − log pref(x) = 5.59 log p(x)
+pref(x) = 3.23 Selected
+有利 you3li4 yˇoulì advantageous; beneficial
+谨慎 jin3shen4 jˇınshèn cautious; prudent
+甲 jia3 jiˇa one; armor (1st Heavenly Stem)
+犹豫 you2yu4 yóuyù hesitate; hesitant; undecided
+从此 cong2ci3 cóngcˇı from now on; since then
+企业 qi3ye4 qˇıyè company; business; firm
+下载 xia4zai3 xiàzˇai to download
+狮子 shi1zi5 sh¯ızi lion
+青少年 qing1shao4nian2 q¯ıngshàonián teenager
+Instance #3 − log p(x) = 0.16 − log pref(x) = 2.73 log p(x)
+pref(x) = 2.56 Selected
+function WritableState(options, stream) {
+var Duplex = require(’./_stream_duplex’);
+options = options || {};
+// the point at which write() starts returning false
+// Note: 0 is a valid value, means that we always
+return false if
+// the entire buffer is not flushed immediately
+on write()
+var hwm = options.highWaterMark;
+var defaultHwm = options.objectMode?16:16*1024;
+this.highWaterMark = (hwm || hwm === 0) ? hwm :
+defaultHwm;
+// object stream flag to indicate whether or not
+this stream
+// contains buffers or objects.
+this.objectMode = !!options.objectMode;
+...
+}
+Table 14: Hard and valuable instances up-sampled by Difference Sampling. Instance #1: High-quality
+long documents containing versatile world knowledge. Instance #2: instance that contains translation
+tasks, presented in an in-context learning form. Instance #3: High-quality code data with detailed
+comments.
+26
+Published as a conference paper at ICLR 2025
+p(x) ≲ pref(x): Noisy and harmful instances
+Instance #1 − log p(x) = 9.50 − log pref(x) = 6.60 log p(x)
+pref(x) = −2.90 Discarded
+]{}
+**********************************************
+. ...
+... .
+Instance #2 − log p(x) = 1.01 − log pref(x) = 0.90 log p(x)
+pref(x) = −0.11 Discarded
+(91.00,60.00) (1.00,35.00) (2.00,35.00)[(1,0)[13.00]{}]
+{} (16.00,35.00) (16.70,34.30)[(1,-1)[8.60]{}]{}
+(26.00,25.00) (26.00,11.00) (26.00,12.00)[(0,1)[12.00]
+{}]{} (36.00,35.00) (26.00,45.00) (16.70,35.70)
+(35.30,34.30)[(-1,-1)[8.60]{}]{} (56.00,35.00)
+(66.00,25.00) (76.00,35.00) (66.00,45.00) (66.00,46.00)
+Instance #3 − log p(x) = 2.53 − log pref(x) = 0.26 log p(x)
+pref(x) = −2.26 Discarded
+*Z* = 8
+----------------- --------------------------
+Data collection #tablewrapdatacollectionlong
+===============
+------------------------------------------
+Bruker APEXII area-detector diffractometer
+Radiation source: fine-focus sealed tube
+graphite
+p and w scans
+Absorption correction: multi-scan
+(*SADABS*; Sheldrick, 2004)
+*T*˜min˜= 0.970, *T*˜max˜= 0.981
+20408 measured reflections
+------------------------------------------
+Table 15: Noisy and harmful instances discarded by Difference Sampling. Instance #1: irregular
+symbols. Both the reference LM and the teacher LM are hard to fit. Instance #2: a string primarily
+made of meaningless numbers. Both the reference LM and the teacher LM are easy to fit, by predicting
+numbers. Instance #3: data collection in scientific paper, but lack of contexts. The reference LM fits
+the patterns, which the teacher LM finds useless.
+27

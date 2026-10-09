@@ -1,0 +1,90 @@
+# MRKL Systems A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning
+URL: https://arxiv.org/abs/2205.00445
+
+MRKL Systems A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning
+
+# MRKL Systems A modular, neuro-symbolic architecture that combines large language models, external knowledge sources and discrete reasoning
+
+ Ehud Karpas Affiliation: AI21 Labs Omri Abend Affiliation: AI21 Labs Yonatan Belinkov Affiliation: AI21 Labs Barak Lenz Affiliation: AI21 Labs Opher Lieber Affiliation: AI21 Labs Nir Ratner Affiliation: AI21 Labs Yoav Shoham Affiliation: AI21 Labs Hofit Bata Affiliation: AI21 Labs Yoav Levine Affiliation: AI21 Labs Kevin Leyton-Brown Affiliation: AI21 Labs Dor Muhlgay Affiliation: AI21 Labs Noam Rozen Affiliation: AI21 Labs Erez Schwartz Affiliation: AI21 Labs Gal Shachaf Affiliation: AI21 Labs Shai Shalev-Shwartz Affiliation: AI21 Labs Amnon Shashua Affiliation: AI21 Labs Moshe Tenenholtz Affiliation: AI21 Labs 
+
+Abstract Huge language models (LMs) have ushered in a new era for AI, serving as a gateway to natural-language-based knowledge tasks. Although an essential element of modern AI, LMs are also inherently limited in a number of ways. We discuss these limitations and how they can be avoided by adopting a systems approach. Conceptualizing the challenge as one that involves knowledge and reasoning in addition to linguistic processing, we define a flexible architecture with multiple neural models, complemented by discrete knowledge and reasoning modules. We describe this neuro-symbolic architecture, dubbed the Modular Reasoning, Knowledge and Language (MRKL, pronounced “miracle”) system, some of the technical challenges in implementing it, and Jurassic-X, AI21 Labs’ MRKL system implementation.
+
+## 1 Introduction
+
+Huge language models (LMs) such as BERT [1], GPT-3 [2], Jurassic-1 [3], PaLM [4], and others [5, 6, 7, 8, 9], have taken AI by storm, with the promise of serving as versatile, general-purpose foundations for many applications. Indeed, partly for this reason, they have been rebranded by some as “foundation models” [10]. The term is meant broadly, covering language models as well as models that were trained on more than just text, and although such multimodal models are not the focus of this paper, there’s another reason to take the term “language model” with a grain of salt. While LMs indeed model syntax, and other linguistic elements, their most striking feature is that they model the world, as described by the data on which they were trained. And so really LMs serve as a textual gateway to the universe of knowledge [11, 12], and perhaps should instead be called “language and knowledge” models.
+
+When viewed this way, it becomes clear that, despite their value, current LMs have inherent limitations. While versatile and impressive, the output of even huge LMs is in many cases wrong, and often ridiculously so [13]. Here is a sample output of GPT-3 on some simple queries. (To be clear, this is not a critique of GPT-3 specifically, and other LMs — including our own Jurassic-1 — exhibit similar silliness.) 
+
+For example, LMs can struggle to understand that there are no US cities with more than 20m citizens, that a math teacher is a person, don’t know what today’s date is, nor can they engage in even simple (e.g., mathematical) reasoning.
+
+When you look for the root cause, you realize the core limitations of LMs: They don’t have access to all relevant knowledge, and neural models are ill-suited for certain types of calculation. More specifically:
+
+1. 1.
+
+Lack of access to current information. Certain data constantly change – the exchange rate between the dollar and the Moroccan Dirham, current COVID numbers, the stock price of AAPL, the weather in Vancouver (OK, not so much), or even the current date. It’s impossible, by their design, for pretrained language models to keep up with this dynamic information [14].
+2. 2.
+
+Lack of access to proprietary information sources. As an important special case of 1, the models don’t have access to proprietary information, such as the client roster in a company’s database or the state of an online game.
+3. 3.
+
+Lack of reasoning. Certain reasoning is beyond the reach of the neural approach, and requires a dedicated reasoning process. We saw above the classic example of arithmetic reasoning. GPT-3 and Jurassic-1 perform well on 2-digit addition, which is impressive, but confidently spit out nonsensical answers on 4-digit additions. With increased training time, better data, and larger models, the performance of LMs will improve, but will not reach the robustness of an HP calculator from the 1970s. And mathematical reasoning is just the tip of an iceberg.
+
+In addition to these shortcomings, there is another inherent problem with the traditional approach to deploying LMs:
+
+1. 4.
+
+Model explosion. Today’s LM’s zero-shot performance trails that of fine-tuned models. One can fine-tune the LM to a specific task, but then lose versatility. Contemporary efforts to mitigate the problem focus on training a huge LM jointly on many sets of curated NLP tasks in a massive multi-task setting (several leading studies reaching $100+100+$ tasks) [7, 15, 16, 6]. These formidable efforts are effective; the resulting models exhibit versatility and high performance when encountering inputs resembling those of the curated tasks. But the performance of these models on tasks that are not close enough to those included in the curated tasks can significantly deteriorate (for example, perplexity degrades significantly). It is not practical to fine-tune and serve multiple large models. Nor can one further tune a multi-task-trained LM [6, 7, 16, 15] on a new task that hadn’t been covered in its training; due to catastrophic forgetting, adding the new task necessitates retraining on the entire task set. Given the cost of training such models [17, 18, 19], this is clearly infeasible to do repeatedly.
+
+Despite all these shortcomings, large language models are an essential backbone of any future AI system. So the question is how to have our cake and eat it too, enjoying the benefits of self-supervised deep language models without suffering these drawbacks. The solution we offer takes the form of a flexible architecture dubbed the Modular Reasoning, Knowledge and Language (MRKL, pronounced “miracle”) system, whose high-level design is depicted below. 
+
+Thus a MRKL system consists of an extendable set of modules, which we term ’experts’, and a router that routes every incoming natural language input to a module that can best respond to the input (the output of that module can be the output of the MRKL system, or be routed to another module). These modules can be:
+
+- •
+
+Neural, including the general-purpose huge language model as well as other smaller, specialized LMs.
+- •
+
+Symbolic, for example a math calculator, a currency converter or an API call to a database.
+
+MRKL systems enjoy important benefits when compared to fine-tuned multi-task models:
+
+1. 1.
+
+Safe fallback: In case the input doesn’t match any existing expert module, the router sends the input directly to the general-purpose huge LM.
+2. 2.
+
+Robust extensibility: Since each expert is trained independently we are able to cheaply add new capabilities while guaranteeing that they do not compromise the performance of existing ones. The only component that requires retraining is the router which is a relatively lightweight task.
+3. 3.
+
+Interpretability: When the router invokes a specific module, that often has the side benefit of providing a rationale for the MRKL system’s output (“$1+1=21+1=2$ because the calculator said so”); such explanations are crucially lacking in existing language models.
+4. 4.
+
+Up-to-date information: The integration of external APIs allows the MRKL system to hook into dynamic knowledge bases, and correctly answer inputs that static models cannot.
+5. 5.
+
+Proprietary knowledge: Access to proprietary databases and other information sources.
+6. 6.
+
+Compositionality: By routing compounded multi-hop inputs to different experts we are able to naturally integrate their responses and correctly address complex inputs [20].
+
+## 2 Jurassic-X: AI21 Labs’ MRKL system
+
+We have implemented a MRKL system called Jurassic-X, which is being piloted by a few partners. Jurassic-X will soon be available to developers; you can apply for early access here. Meanwhile, you can experience Jurassic-X via a demo (link).
+
+## 3 Crossing the neuro-symbolic chasm: A calculator test case
+
+There are of course many details involved in implementing a MRKL system. In connection with avoiding model explosion, see our detailed discussion here. There is also an interesting challenge of how to intelligently route input among modules, which we leave for a separate discussion. Here we discuss one particularly interesting challenge, that of extracting from the text the formal arguments to symbolic reasoners.
+
+### 3.1 Arithmetic as a test case for chasm crossing
+
+The relation between neural and symbolic approaches to AI is guaranteed to raise heated discussions about their relative merits with neuro-skeptics on one extreme, neuro-diehards on the other, and the rest trying to have a rational conversation. Before discussing our technical approach we’d like to clarify our guiding ideology. We believe that neural LMs are essential; we didn’t build Jurassic-1 [3] for no reason, and it serves as a backbone to our applications as well as those of developers using AI21 Studio. But as we’ve made clear, we also believe they have inherent shortcomings. We don’t take a firm position on which types of computation are best relegated to the neural machinery, and which should be carved out to symbolic methods. That will surely be an evolving process. What we do firmly believe is that some tasks should be handled by discrete methods, and we should have a clear methodology for how to hand off the computation from the neural net to the symbolic procedure.
+
+Once the router has made the decision of which module to call upon, it needs to pass the right information to it. The router is a specialized neural net and therefore invoking a neural module is easy since the neural-to-neural interface is natural. However, when a neural network needs to access a database, make an API call, or invoke another symbolic computation, it must extract from the text discrete parameters required by the module. The main message here is that there is no free lunch, but that lunch is in many cases affordable. The cost is in training the router to extract the arguments reliably, which must be done rigorously. We make the point by discussing how we trained Jurassic-X to extract basic arithmetic operations.
+
+There are many ways to describe in language a situation that calls for performing arithmetic. The most straightforward way is to use mathematical notation, say $`​`​3−1=?′′``3-1=?^{\prime\prime}$. Google search handles it well: 
+
+Not much harder is to express it in words, as in “How much is three minus 1”. Google search does this well too: 
+
+But then it gets tricky. At the lexical level, one may use different synonyms that carry the same meaning: (“twelve”, “12” and “a dozen”). But beyond simple lexical issues, there are phrases that require world knowledge to understand that there is an arithmetic exercise encoded in the text (“I lost one ball”, “I dropped one ball”, “One ball was taken from me”) and what the specific exercise is. Here Google search starts to stumble: 
+
+This is where language models come in. Note that we limit their role to extracting the right arguments for the symbolic calculator, not performing the calculation itself. But we should approach even this task with sober expectations. As anyone knows from elementary school, it’s harder to teach children to solve verbal math problems than to solve explicit
