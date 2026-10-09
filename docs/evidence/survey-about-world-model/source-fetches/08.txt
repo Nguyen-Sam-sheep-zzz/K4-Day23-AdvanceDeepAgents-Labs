@@ -1,0 +1,66 @@
+# WBench: A Comprehensive Multi-turn Benchmark for Interactive Video World Model Evaluation
+URL: https://arxiv.org/html/2605.25874
+
+WBench: A Comprehensive Multi-turn Benchmark for Interactive Video World Model Evaluation
+
+# WBench: A Comprehensive Multi-turn Benchmark for Interactive Video World Model Evaluation
+
+Kaining Ying1 Hengrui Hu111footnotemark: 1 Siyu Ren2 Jiamu Li2 Fengjiao Chen2 Ziwen Wang2 Xuezhi Cao2 Xunliang Cai2 Henghui Ding1 1Fudan University 2Meituan Longcat Team Homepage GitHub HuggingFace Equal contribution.Correspondence: Henghui Ding <hhding@fudan.edu.cn>
+
+###### Abstract
+
+Interactive world models are advancing rapidly, yet existing benchmarks cover only part of the required competencies, leaving no unified standard for systematic evaluation. To fill this gap, we introduce WBench, a comprehensive multi-turn benchmark for interactive world model evaluation along five dimensions, namely video quality, setting adherence, interaction adherence, consistency, and physics compliance. WBench contains 289 test cases and 1,058 interaction turns, where each case specifies a world setting and a multi-turn interaction sequence, covering diverse scenes, styles, subjects, and both first- and third-person perspectives, together with four interaction types, including navigation, subject action, event editing, and perspective switching. For navigation, WBench unifies text, 6-DoF pose, and discrete-action control, enabling evaluation of models with different native input interfaces. Evaluation uses 22 automatic sub-metrics that combine specialist vision models with large multimodal models, and all metrics are validated against human judgments. Across 20 state-of-the-art models, we find that no single model performs strongly across all dimensions. We provide detailed diagnostic insights into the characteristic strengths, weaknesses, and open challenges of each model. Code and data are available at https://github.com/meituan-longcat/WBench.
+
+Figure 1: Overview of WBench. Top: a multi-turn case with navigation, subject action, event editing, and perspective switching. Bottom: the benchmark design, including world settings, interaction taxonomy, unified navigation control, and evaluation over video quality, setting adherence, interaction adherence (navigation and semantic interactions), consistency, and physics compliance.
+
+## 1 Introduction
+
+Recent advances in video generation [1, 2, 3, 4, 5] have enabled interactive world models with controllable generation across games [6, 7, 8, 9, 10, 11, 12], autonomous driving [13, 14], embodied interaction [15, 16], and open-domain scenarios [17, 18, 19, 20]. However, evaluation remains fragmented, with many works relying on selected demos or task-specific protocols, making fair comparison and failure diagnosis difficult across visual quality, controllability, memory, and physics.
+
+A capable interactive world model must fulfill five complementary roles, analogous to the subsystems of a game engine: a Renderer for visually convincing video, a Director for correct world initialization, a Controller for faithful interaction execution, a Memory for preserving world state across turns, and an Engine for physically compliant world evolution. Existing benchmarks cover these roles only partially (Table˜1). Video-generation benchmarks such as VBench [21, 22] focus on perceptual quality without interactive control. World-model benchmarks evaluate more dimensions but remain limited in scope: WorldMark [23] and MIND [24] cover navigation and memory but lack semantic interactions, Omni-WorldBench [25] adds causal interaction but supports only first-person view, and WorldLens [26] evaluates multiple dimensions but is restricted to autonomous driving. None provides a unified protocol spanning open-domain scenes, both perspectives, and all four interaction types.
+
+To address this gap, we introduce WBench, a comprehensive multi-turn benchmark for interactive world model evaluation. As shown in Fig.˜1, each test case is defined by a world setting (scene, subject, style, and perspective) together with a multi-turn interaction sequence. The top row illustrates a concrete case: a realistic snowy mountain scene with a human subject in third-person perspective, followed by forward navigation, a jump, the appearance of a helicopter, and a perspective switching to the cockpit. More broadly, the benchmark spans diverse open-domain scenes, rendering styles, subject categories, and both first- and third-person perspectives (Fig.˜1 ​(a)), with four interaction types shown in Fig.˜1 ​(b): navigation, subject action, event editing, and perspective switching. This design separates what the world is from what the user requests, making failure modes easier to locate: a model may render the initial scene well but ignore later actions, or follow a single instruction correctly but lose identity and spatial consistency over multiple turns.
+
+WBench also supports fair comparison across different control paradigms. As shown in Fig.˜1 ​(c), navigation interactions are represented in three aligned forms, namely text, camera pose, and discrete action, so that models can be evaluated through their native interfaces. Accordingly, we adopt a dual-track evaluation protocol: all 20 models are compared on a shared navigation subset of 158 cases, while text-prompted I2V models are further evaluated on the full benchmark (289 cases, 1,058 turns). Evaluation uses 22 automatic sub-metrics combining specialist vision models and VLMs.
+
+Experiments on 20 models reveal that: 1) no model dominates all five dimensions, 2) navigation is largely independent of other dimensions, 3) camera control and perspective consistency are separate capabilities, 4) physical correctness correlates with rendering quality rather than control, 5) benchmark difficulty is structured by perspective, scene type, and subject category, and 6) four interaction types degrade unevenly over turns, with navigation most fragile.
+
+Our contributions are: 1) a unified benchmark spanning five complementary evaluation dimensions with 22 fine-grained sub-metrics, 2) a multi-turn dataset covering both perspectives, four interaction types, and a unified navigation interface enabling fair cross-paradigm comparison, and 3) a fully automatic evaluation pipeline applied to 20 models, establishing diagnostic baselines and surfacing actionable insights for future model development.
+
+## 2 Related Work
+
+Video Generation Models. Video generation has evolved rapidly, from early U-Net-based diffusion models [1, 27, 28] to scalable Diffusion Transformers [29, 4, 2] trained with flow-matching objectives on large-scale data, yielding longer, higher-resolution, and temporally coherent outputs. Building on this foundation, the current frontier like Sora 2 [30], Kling 3.0 [31], Veo 3 [32], Wan 2.7 [33], and others [34, 35, 2, 36, 37, 38], collectively advance cinematic quality, prompt adherence, efficient inference, physical grounding, and long-horizon continuation. Despite these advances, evaluation still centers on distributional metrics (FID [39], FVD [40]), text-alignment scores, or multi-dimensional quality suites [21], none of which probe interactive controllability or world-modeling competence.
+
+Interactive Video World Models. World models [41, 42] predict environment evolution in response to actions. While traditionally realized as latent state-space models, recent video generators have enabled a new paradigm: interactive video world models that directly synthesize next frames from the current observation and an action signal, enabling closed-loop simulation. Although early systems also appeared in robotic manipulation and autonomous driving, such as UniSim [15], IRASim [16], GAIA-1 [13], and Vista [14], we focus on the open-domain branch most relevant to WBench. Among world models evaluated in this work, YUME 1.5 [19] represents language-driven interaction, using natural-language actions for multi-turn world evolution, while HY-World 1.5 [17] and LingBot-World [20] represent camera-controlled generation with an emphasis on navigation and geometric consistency. Action-conditioned systems such as Hunyuan-GameCraft [11, 12], Matrix-Game 2.0 [9], and Matrix-Game 3.0 [10] push real-time keyboard-and-mouse control, with Matrix-Game 3.0 further improving long-horizon consistency through explicit memory. Closed-source systems such as Genie 3 [8], Happy Oyster [43], and Marble [44] further highlight the momentum of this area.
+
+World Model Evaluation. As shown in Table˜1, existing benchmarks fall into two broad groups. Non-interactive suites such as VBench [21, 45, 22], EvalCrafter [46], and VideoPhy [47, 48] assess video quality, text alignment, or physical commonsense, but do not take action inputs or evaluate multi-turn interaction. Among world model benchmarks, WorldScore [49] evaluates camera-trajectory-conditioned generation, WorldModelBench [50] studies decision-oriented world-model quality, WorldArena [51] targets embodied agents in closed domains, MIND [24] probes closed-loop memory consistency, Omni-WorldBench [25] focuses on causal interaction, WorldLens [26] targets autonomous driving, and WorldMark [23] measures navigation consistency. Additional efforts examine complementary aspects [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 12, 62]. Despite this rapid progress, no existing benchmark jointly covers (i) diverse open-domain scenes, (ii) both first- and third-person perspectives with perspective-dependent action semantics, (iii) a comprehensive interaction taxonomy spanning navigation, subject action, event editing, and perspective switching, and (iv) multi-turn closed-loop evaluation targeting long-horizon consistency and physics compliance. WBench fills this gap with a unified framework across all four axes, instantiated through 22 fine-grained automatic sub-metrics.
+
+Table 1: Comparison with representative benchmarks. Input: T = text, = camera, = action. FPP / TPP: first- / third-person perspective. Navi, SA, EE, PS: navigation, subject action, event editing, and perspective switching. Qual, Adh, Inter, Cons, Phys: video quality, setting adherence, interaction adherence, consistency, and physics compliance. Full comparison is provided in Table˜3.
+
+| Benchmark | Input | Persp. | Interactions | Dimensions | Scale |
+| --- | --- | --- | --- | --- | --- |
+| FPP | TPP | Navi | SA | EE | PS | Qual | Adh | Inter | Cons | Phys | Cases | Turns |
+| VBench [21] | T | – | – | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | 946 | 946 |
+| WorldScore [49] | T | ✓ | ✗ | ✓ | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | 3,000 | 3,000 |
+| WorldModelBench [50] | T | ✓ | – | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✓ | 350 | 350 |
+| MIND [24] | T | ✓ | – | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | 250 | – |
+| WorldArena [51] | T | ✓ | ✗ | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | 500 | 500 |
+| Omni-WorldBench [25] | T | ✓ | – | ✓ | ✓ | ✓ | ✗ | ✓ | ✗ | ✓ | ✓ | ✓ | 1,068 | 1,068 |
+| WorldLens [26] | T | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | 26k | – |
+| WorldMark [23] | T | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | 500 | – |
+| WBench (Ours) | T | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 289 | 1,058 |
+
+## 3 WBench Dataset
+
+Figure 2: Dataset composition of WBench across eight axes. We discuss these in Section˜3.2.
+
+An interactive world model [41, 42] acts as a conditional generator that predicts the next observation $o_{t+1}$ given the historical observation $o_{\leq t}=(o_{0},\dots,o_{t})$ and the action $a_{\leq t}=(a_{0},\dots,a_{t})$ :
+
+| $$o_{t+1}\sim f_{\theta}(o_{t+1}|o_{\leq t},a_{\leq t}).$$ | (1) |
+| --- | --- |
+
+To systematically evaluate this process, every case in WBench decomposes the inputs into two components: a World Setting $\mathcal{W}$ that defines the initial world state $o_{0}$ , and an Interaction sequence $\mathcal{I}=(a_{0},a_{1},\dots,a_{T-1})$ that specifies the user control signals spanning $T$ consecutive turns.
+
+### 3.1 Dataset Construction
+
+World Settings. A world

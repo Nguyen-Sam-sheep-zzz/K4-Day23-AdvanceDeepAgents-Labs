@@ -1,0 +1,72 @@
+# SOP-Bench: Complex Industrial SOPs for Evaluating LLM Agents
+URL: https://arxiv.org/abs/2506.08119
+
+SOP-Bench: Complex Industrial SOPs for Evaluating LLM Agents
+
+arXiv is now an independent nonprofit! Learn more×
+
+# SOP-Bench: Complex Industrial SOPs for Evaluating LLM Agents
+
+Subhrangshu Nandi Note: Primary Authors email: subhrn@amazon.com Affiliation: Amazon, USA , Arghya Datta email: arghya.dat@gmail.com Affiliation: ex-Amazon, USA , Rohith Nama email: rohinama@amazon.com Affiliation: Amazon, USA , Udita Patel email: patudita@amazon.com Affiliation: Amazon, USA , Nikhil Vichare email: nvichare@amazon.com Affiliation: Amazon, USA , Indranil Bhattacharya email: bindrani@amazon.com Affiliation: Amazon, USA , Prince Grover email: pringrov@amazon.com Affiliation: Amazon, USA , Shivam Asija email: asijashi@amazon.com Affiliation: Amazon, USA , Giuseppe Carenini email: carenini@amazon.com Affiliation: Amazon, USA , Wei Zhang email: wzhngm@amazon.com Affiliation: Amazon, USA , Arushi Gupta email: arushimg@amazon.com Affiliation: Amazon, USA , Sreyoshi Bhaduri email: drsre@amazon.com Affiliation: Amazon, USA , Jing Xu email: xuzjx@amazon.com Affiliation: Amazon, USA , Shayan Ray email: shayanray2018@gmail.com Affiliation: ex-Amazon, USA , Huzefa Raja email: huzeraja@amazon.com Affiliation: Amazon, USA , Aaron Chan email: chaaron@amazon.com Affiliation: Amazon, USA , Esther Xu Fei email: exf@amazon.com Affiliation: Amazon, USA , Gaoyuan Du email: gdu@amazon.com Affiliation: Amazon, USA , Zuhaib Akhtar email: zuhaibak@amazon.com Affiliation: Amazon, USA , Harshita Asnani email: asnaharn@amazon.com Affiliation: Amazon, USA , Weian Chen email: weiac@amazon.com Affiliation: Amazon, USA , Ming Xiong email: xiongmin@amazon.com Affiliation: Amazon, USA , Francesco Carbone email: carbonef@amazon.com Affiliation: Amazon, USA and Jeetu Mirchandani email: jeetu@amazon.com Affiliation: Amazon, USA
+
+© none
+
+###### Abstract.
+
+LLM-based agents struggle to execute complex, multi-step Standard Operating Procedures (SOPs) that are fundamental to industrial automation. Existing benchmarks fail to capture the procedural complexity and tool orchestration demands of real-world workflows. We introduce SOP-Bench, a benchmark of 2,000+ tasks from human expert-authored SOPs across 12 business domains (healthcare, logistics, finance, content moderation, etc.). Using a human-AI collaborative framework, experts crafted authentic SOPs while AI generated artifacts (tools, APIs, datasets), all human-validated, yielding realistic tasks with executable interfaces and ground-truth outputs.
+
+SOP-Bench serves as a research enabler for systematically investigating agent architectures, model capabilities, and deployment considerations across diverse procedural tasks. We demonstrate its utility through illustrative experiments with a subset of frontier models across Function-Calling (FC) and ReAct agents, revealing critical insights. For example, (1) newer models do not guarantee better performance - Claude 4 family outperforms Claude 4.5 family on ReAct tasks (Claude 4 Opus: 72.4% vs. Claude 4.5 Sonnet: 63.3% task success rate), demonstrating that production upgrades require validation; (2) no single model-agent combination dominates: best performances range from 57% to 100% depending on domain. These examples illustrate how SOP-Bench enables isolating and studying specific dimensions of agent performance without costly production experiments. Our goal is not to rank model capabilities or build optimal agents, but to provide a rigorous evaluation framework that enables the researchers and practitioners to systematically investigate agent design choices, model selection, and deployment strategies. We release the benchmark at https://github.com/amazon-science/sop-bench.
+
+Figure 1. SOP-Bench evaluation overview. Realistic business process SOPs authored by human experts across diverse domains are converted into executable task instances with structured tool/API interfaces and ground-truth outputs. LLM agents execute tasks via reproducible tool interactions, producing execution trajectories evaluated using grounded, outcome-aware metrics (ECR, C-TSR, TSR).
+
+## 1. Introduction
+
+Standard Operating Procedures (SOPs) are central to reliable operations across industries, encoding domain expertise, compliance rules, and decision logic into structured workflows (De Treville et al., 2009; Dumas et al., 2018). Recent advances in large language models (LLMs) have sparked growing interest in automating SOP execution using LLM-based agents (Wang et al., 2023; Yao et al., 2023; Chase, 2022; Gschwind et al., 2025). However, deploying such agents in production exposes challenges that are not captured by existing benchmarks such as Gorilla (Patil et al., 2023), API-Bank (Li et al., 2023a), or ComplexBench (Wen et al., 2024).
+
+Table 1. Diversity of SOPs in industry, assessed by GPT-4-turbo (OpenAI, 2024) and validated by human associates with extensive cross-domain SOP review experience.
+
+| Criteria | SLUHN | UNTHS |
+| --- | --- | --- |
+| Length | Long (7 pgs) | Short (3 pgs) |
+| Ambiguity | Low | Moderate |
+| Step complexity | High | Low-Mod |
+| Implicit knowledge | High | Low-Mod |
+| Modularity | High | Moderate |
+
+These challenges are particularly acute in knowledge operations like verification services, support ticket triaging, and customer support, where SOPs involve ambiguous language, implicit domain knowledge, and complex decision trees (Roberts, 2019). For example, consider the two patient registration SOPs in appendix E, one from St. Luke’s University Health Network (SLUHN)11 1 https://www.slhn.org/-/media/slhn/Research/File/PDF/SOPs-and-Policies/SOP-302Patient-Registration-and-Ongoing-Subject-MgmtV30CLEAN71216.ashx, and one from University of North Texas Health Science Center (UNTHS) 22 2 https://www.unthsc.edu/wp-content/uploads/sites/23/Patient_Registration.pdf. Table 1 shows how different two SOPs of the same domain can be.
+
+Such business knowledge operations differ fundamentally from traditional process automation tasks (Ribeiro et al., 2020). They require contextual interpretation, multi-step information synthesis, and judgment under ambiguity, often with evolving guidelines and subjective classifications (Roberts, 2019; Gordon et al., 2022). Figure 2 shows a representative example: instructions that are straightforward for human operators with implicit domain knowledge but ambiguous for LLM agents. Existing evaluation frameworks typically isolate individual capabilities—such as tool use (Huang et al., 2024), planning (Yao et al., 2023), or instruction following (Wang et al., 2022)—using clean, synthetic prompts that fail to reflect the messiness of real-world SOPs.
+
+While recent advances in LLMs have enabled sophisticated instruction following and tool use (Wang et al., 2022; Yao et al., 2023), automating SOP execution poses unique challenges that existing benchmarks fail to capture. Current evaluation frameworks primarily focus on isolated capabilities—tool use (Huang et al., 2024), planning (Yao et al., 2023), or instruction following (Wang et al., 2022), using clean, synthetic prompts that sidestep the messiness of real-world procedures.
+
+Figure 2. Example of instructions that can be simple for humans but confusing for LLMs. In this excerpt of page 2 of the UNHTS-SOP (appendix E), we can see that steps 4 and 6 both have instructions on verifying the insurance, but does not have explicit information on how to verify it. Moreover, it is not clear why there are two steps of insurance verifications. For human associates with implicit knowledge of the domains this might not be as ambiguous, while our experiments indicate that it is for LLMs. In our experience, this is a common occurrence in business process SOPs.Screenshot of a section of the UNHTS SOP showing numbered steps. Two different steps mention verifying insurance, but neither specifies how to verify or why verification is repeated.
+
+To address this gap, we introduce SOP-Bench, a comprehensive benchmark for evaluating LLM agents on realistic business SOP execution. SOP-Bench is constructed from human expert-authored SOPs spanning twelve diverse domains, including healthcare intake, hazardous goods classification, customer service, content moderation, and financial compliance. Industry experts authored authentic procedures reflecting real-world ambiguity, branching logic, and implicit knowledge requirements. To enable reproducible evaluation, we adopt a human–AI collaborative workflow in which AI models generate supporting artifacts (mock tools, APIs, and test datasets) that are subsequently validated by human experts. This process yields over 2,000 executable tasks with structured tool interfaces and grounded outputs that closely mirror production environments.
+
+We make three primary contributions: (1) Human–AI collaborative benchmark construction framework: We introduce a scalable methodology where industry experts author authentic SOPs while AI assists in generating executable artifacts, all human-validated for correctness and realism. (2) A comprehensive benchmark for systematic agent evaluation: SOP-Bench provides 2,000+ tasks across 12 domains with varying procedural complexity, document length, branching logic, and tool usage, enabling controlled study of agent architectures and foundation models without costly production experimentation. (3) Empirical insights via illustrative experiments: Through experiments and ablations on representative frontier models, we demonstrate how SOP-Bench reveals non-obvious trade-offs in architecture choice, reasoning cost, and domain generalization.
+
+Our goal is not merely to rank models, but to establish SOP-Bench as an evaluation substrate for studying agent design, model selection, and deployment strategies under realistic procedural constraints. We release the full benchmark, baseline agents, and evaluation framework at https://github.com/amazon-science/sop-bench, enabling the community to extend SOP-Bench with new domains and contribute back to a shared evaluation ecosystem.
+
+Table 2. SOP-Bench uniquely combines all seven capabilities essential for real-world industrial workflow automation, addressing critical gaps in existing agent benchmarks.
+
+| Benchmark | IF | MS | Tool | Amb. | Err. | Dep. | Ind. |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| AlpacaEval | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| FollowEval | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| ComplexBench | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ |
+| InFoBench | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Gorilla | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| API-Bank | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| AgentBench | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
+| PlanBench | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ |
+| ALFWorld | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✗ |
+| SOP-Maze | ✓ | ✓ | ✗ | ✓ | ✗ | ✓ | ✓ |
+| SOP-Bench | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+Legend: IF = Instruction Following; MS = Multi-step Tasks; Tool = Tool/API Integration; Amb. = Real-world Ambiguity; Err. = Error Handling; Dep. = Workflow Dependencies; Ind. = Industrial Context.
+
+## 2. Related Work
+
+LLM Agents for Planning and Tool Use. LLMs have enabled the emergence of AI agents capable of task planning, reasoning, and tool use. Architectures such as ReAct (Yao et al., 2023), AutoGPT (Yang et al., 2023), and LangChain (Chase, 2022) have demonstrated autonomous decision-making via multi-step reasoning and API calls. ToolChain (Zhuang et al., 2023) and ToolLLM (Qin et al., 2023) extend this by integrating dynamic tool execution. However, these systems are mostly evaluated in highly simplistic settings, limiting their applicability to real-world operational workflows.
+
+Instruction Following and Benchmarking. Instruction following ability has been benchmarked through datasets like SUPER-NATURAL-INSTRUCTIONS (Wang et al., 2022), AlpacaEval (Li et al., 2023b), and FollowEval (Jing et al., 2023). More recent multi-step benchmarks like ComplexBench (Wen et al., 2024) and InFoBench (Qin et al., 2024) e

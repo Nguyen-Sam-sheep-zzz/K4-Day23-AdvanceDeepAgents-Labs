@@ -1,0 +1,30 @@
+{
+  "topic": "survey about world model",
+  "model": "gpt-6-luna",
+  "elapsed_s": 384.8,
+  "subagent_calls": 6,
+  "tool_calls": {
+    "write_todos": 2,
+    "task": 6,
+    "ls": 2,
+    "read_file": 9,
+    "write_file": 2,
+    "execute": 3,
+    "edit_file": 5
+  },
+  "tokens": {
+    "input": 458117,
+    "output": 9718
+  },
+  "researcher_calls": 4,
+  "checker_calls": 2,
+  "max_parallel_researchers": 3,
+  "token_scope": "lead_messages_only",
+  "n_sources": 12,
+  "source_families": [
+    "arxiv",
+    "hf-daily",
+    "hf-search",
+    "web"
+  ]
+}

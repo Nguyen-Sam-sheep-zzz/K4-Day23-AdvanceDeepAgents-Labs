@@ -1,0 +1,61 @@
+# TC-Bench: Benchmarking Temporal Compositionality in Conditional Video Generation
+URL: https://aclanthology.org/2025.findings-acl.241.pdf
+
+Findings of the Association for Computational Linguistics: ACL 2025, pages 4638–4662 July 27 - August 1, 2025 ©2025 Association for Computational Linguistics
+
+TC-Bench: Benchmarking Temporal Compositionality in Conditional Video Generation
+
+Weixi Feng 1 Jiachen Li 1 Michael Saxon 1 Tsu-jui Fu 1 Wenhu Chen 2 William Yang Wang 1
+
+1University of California, Santa Barbara, 2University of Waterloo
+
+##### Abstract
+
+Video generation has many unique challenges beyond those of image generation. The tem poral dimension introduces extensive possible variations across frames, over which consis tency and continuity may be violated. In this work, we evaluate the emergence of new con cepts and relation transitions as time progresses in a video, which we refer to as Temporal Com positionality. We propose TC-Bench, a bench mark of meticulously crafted text prompts, ground truth videos, and new evaluation met rics. The prompts articulate the initial and fi nal states of scenes, effectively reducing am biguities for frame development. In addi tion, by collecting corresponding ground-truth videos, the benchmark can be used for text-to video and image-to-video generation. We de velop new metrics to measure the completeness of component transitions, which demonstrate significantly higher correlations with human judgments than existing metrics. Our experi ments reveal that contemporary video gener ators are still weak in prompt understanding and achieve less than 20% of the compositional changes, highlighting enormous improvement space. Our analysis indicates that current video generation models struggle to interpret descrip tions of compositional changes and synthe size various components across different time steps. Code & data: https://github.com/ weixi-feng/tc-bench
+
+##### 1 Introduction
+
+Conditional video generation is the task of synthe sizing realistic videos based on controlling inputs such as text prompts (text-to-video, T2V) or im ages (image-to-video, I2V). Significant advance ment in dataset scale and model design has led to several large-scale, high-quality video genera tion models, such as CogVideo (Hong et al., 2022), VideoCrafter (Chen et al., 2023a), Stable Video Diffusion (Blattmann et al., 2023a), and others (Ho et al., 2022; Singer et al., 2022; Blattmann et al.,
+
+2023b). The additional time dimension in videos makes it essential to accurately assess and bench mark the alignment between the generated tempo ral variations and the condition inputs. While sev eral studies have proposed fine-grained and compre hensive evaluation protocols (Huang et al., 2024c; Liu et al., 2024c,b; Wu et al., 2024), composition ality in the temporal dimension remains an under addressed yet crucial aspect of video generation tasks. The principle of compositionality specifies how constituents are arranged and combined to make a whole (Bienenstock et al., 1996; Partee, 2008; Cresswell, 2016). Ideal generative systems should produce outputs that reflect the compositions de scribed by the prompts (Liu et al., 2022; Li et al., 2023a; Dziri et al., 2024). In image generation, prior work has focused on improving faithful com positionality in attributes, numbers, and spatial arrangement (Feng et al., 2022; Chatterjee et al., 2024; Lee et al., 2023). In video generation, compo sitional faithfulness is much more challenging—the output must consistently reflect the required combi nation of concepts, even as it changes through time. In this work, we investigate this temporal compo sitionality problem in video generation models by focusing on prompts describing scenarios where object attributes or relations change over time. While image generation prompts involving spa tial compositionality (Yu et al., 2022; Huang et al., 2024b) and video prompts describing actions or motions (Huang et al., 2024c; Liu et al., 2024c; Soomro et al., 2012; Xu et al., 2016) have been used for assessing T2V models, they have two drawbacks: first, these prompts describe invariant compositions in time, and second, they lead to syn thesized videos that manipulate existing metrics. For instance, while Fig. 1 (left) depicts “a horse running on the beach” motion, there are no com positional variations in the visual entities along the time axis. Such omissions can lead to flaws that, 4638
+
+## Height ℎ Width
+
+Time
+
+## Height ℎ Width
+
+Time
+
+ℎ 
+× 
+ℎ 
+× 
+
+No vertical “edges”, no compositional change across time
+
+Vertical “edges”: disappearance and emergence of concepts
+
+“A horse running on the beach.” No or ambiguous temporal compositionality “An orange chameleon turns pink, … from left to right” Specific temporal compositionality
+
+Shift of horizontal edges: object position change Figure 1: Left: a common text-video pair used in video generation evaluation with no temporal compositionality. Right: a sample from our TC-Bench. Different colors of the chameleon are composed along the time axis, resulting in the vertical “edges” in the spatiotemporal image. The gap between horizontal edges shows changes in the chameleon’s position and its relation with the branch.
+
+while noticeable to human users, are not captured by current benchmarks. In contrast, Fig. 1 (right) involves more specific compositional changes in position and color, marked by the vertical “edges” and the gap between horizontal edges in the spa tiotemporal image representing attribute or object binding changes. To this end, we propose Temporal Compositionality Benchmark (TC-Bench), which addresses three scenarios of compositional changes: attribute transition, object relations, and background shifts. We craft realistic prompts that clearly specify an object’s initial and final states, thereby requiring changing compositional characteristics in a correctly synthesized video. These prompts span a wide range of topics and scenes and present distinct challenges to different modules of T2V models. On the one hand, the text encoding stage needs to aggregate different groups of constituents from the prompt to guide the generation of different frames. On the other hand, the generation module must synthesize seamless transitions between frames while maintaining object consistency. To broaden applicability to I2V, we collect ground truth videos corresponding to the prompts, which allows us to benchmark models capable of performing generative frame interpolation (Chen et al., 2023b; Xing et al., 2023). To facilitate the use of TC-Bench, we propose two evaluation metrics, TCR and TC-Score, that first produce frame-level compositionality asser tions and check them throughout the video using vision language models (VLMs). TCR and TC
+
+Score measure compositional transition comple tion and overall text-video alignment, which are better correlated to human judgments than exist ing metrics. We extensively benchmark multiple baselines across three categories of methods, rang ing from direct T2V models (Wang et al., 2023a; Chen et al., 2024; Zhang et al., 2023a; Wang et al., 2023b) to multi-stage T2V (Huang et al., 2024a; Lian et al., 2023) and I2V models (Chen et al., 2023b; Xing et al., 2023). Our comprehensive experiments demonstrate that most of the video generation models accomplish less than ∼ 20% of the test cases, implying enormous space for future improvement. Our contribution can be summarized as three points:
+
+• TC-Bench, a new benchmark that character izes temporal compositionality in video gen eration. TC-Bench features different types of realistic transitions and covers a wide range of visual entities, scenes, and styles. 
+• We propose new metrics to evaluate transition completion and text-video alignment and in vestigate consistency measures with various methods. Our metrics achieve much higher correlations with human judgments for evalu ating temporal compositionality. 
+• A comprehensive evaluation of nine baselines shows that existing T2V and I2V methods still struggle with temporal compositionality. Our in-depth analysis reveals key weaknesses of current methods in prompt understanding and maintaining temporal consistency. 
+
+##### 2 Related Work
+
+2.1 Conditional Video Generation Conditional video generation has been a challeng ing task (Balaji et al., 2019; Zhang et al., 2022; Fu et al., 2023; Blattmann et al., 2023a). Recently, with the advancement of diffusion models (Ho et al., 2020, 2022) and large-scale video datasets (Bain et al., 2021; Wang et al., 2023c), video gener ation models have gained significant improvement (Ho et al., 2022; Singer et al., 2022). Several stud ies attempt to add temporal operation layers into a pre-trained image model, such that the latter can be adopted as a video generation model in a zero shot manner (Khachatryan et al., 2023) or through fine-tuning (Blattmann et al., 2023b). The idea of latent space diffusion (Rombach et al., 2021) has also been used in many video generation pipelines to improve the efficiency of training. For T2V, Modelscope (Wang et al., 2023a) pro poses spatial-temporal blocks. LaVie (Wang et al., 2023b) concatenates three latent diffusion models for base video generation and spatial and temporal super-resolution. Similarly, Show-1 (Zhang et al., 2023a) concatenates three pixel-based and one la tent diffusion model. VideoCrafter2 (Chen et al., 2023a, 2024) adopts a single latent diffusion model and devises a technique to better use high-quality image data. For I2V generations, SEINE (Chen et al., 2023b) designs a random masking mecha nism. DynamiCrafter (Xing et al., 2023) proposes a dual-stream image injection paradigm. Both can generate transitions between two input frames. 2.2 Video Generation Benchmarks Many large-scale text-to-video models are eval uated on the standard UCF-101 (Soomro et al., 2012) and MSRVTT (Xu et al., 2016) benchmarks by reporting FVD for video quality and CLIP sim ilarities for text-video alignment (Radford et al., 2021). Recently, a few benchmarks and metrics have been proposed to promote more comprehen sive and fine-grained video evaluation. EvalCrafter (Liu et al., 2024b) proposes a pipeline to exhaus tively evaluate four aspects of the generated videos, such as text-video alignment and temporal consis tency. FETV (Liu et al., 2024c) disentangles major content and attribute control in prompts to achieve a fine-grained evaluation of text-video alignment. VBench (Huang et al., 2024c) is another evaluation suite that adopts a unique evaluator for each of the 16 dimensions. T2VScore (Wu et al., 2024) uses
+
+Large Language Models (LLM) and video question answering (VQA) models to evaluate the text-video alignment. However, prompts in these benchmarks underaddress any transitions in attributes or object relations. Besides, we show that these metrics have marginal correlations with human ratings. In con trast, we are the first to design a benchmark and metrics that specifically characterize temporal com positionally.
+
+##### 3 TC-Bench Prompts
+
+Prompt Types In this work, prompts with spe cific temporal compositionality follow one of the three types of scene graph transitions, as shown in Fig. 2 (left). We use oi to denote an object, ai to denote an attribute, and arrows or line segments to represent possession or other relationships be tween them. Based on the scene graph change, the prompts are categorized into three types: attribute transition, object relation change, and background shifts with one example for each in Fig. 2 (right).
+
+Data Collection To collect the prompts and the corresponding videos, we adopt a multi-round human-in-the-loop approach. We craft several prompt examples and verbalized type definitions. Then, we prompt an LLM to generate more prompts following similar formats and definitions. We manually select 50 samples for each type, lead ing to TC-Bench-T2V. The prompts cover a broad spectrum of attributes, actions, and objects, ex plicitly depicting

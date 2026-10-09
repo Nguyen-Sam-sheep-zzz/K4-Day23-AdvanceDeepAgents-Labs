@@ -1,0 +1,44 @@
+[
+  {
+    "n": 1,
+    "url": "https://arxiv.org/abs/2104.10157",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 2,
+    "url": "https://arxiv.org/abs/2204.03458",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 4,
+    "url": "https://arxiv.org/abs/2412.07772",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 7,
+    "url": "https://arxiv.org/abs/2512.06022",
+    "chars": 5349,
+    "status": "retrieved"
+  },
+  {
+    "n": 8,
+    "url": "https://arxiv.org/abs/2511.13219",
+    "chars": 12000,
+    "status": "retrieved"
+  },
+  {
+    "n": 9,
+    "url": "https://huggingface.co/papers/2609.32540",
+    "chars": 2655,
+    "status": "retrieved"
+  },
+  {
+    "n": 11,
+    "url": "https://arxiv.org/abs/2610.11736",
+    "chars": 12000,
+    "status": "retrieved"
+  }
+]

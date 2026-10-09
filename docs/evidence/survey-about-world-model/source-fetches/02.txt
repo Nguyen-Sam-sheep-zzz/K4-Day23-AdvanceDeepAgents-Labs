@@ -1,0 +1,151 @@
+# Dream to Control: Learning Behaviorsby Latent Imagination
+URL: https://arxiv.org/abs/1912.01603
+
+Dream to Control: Learning Behaviorsby Latent Imagination
+
+arXiv is now an independent nonprofit! Learn more×
+
+# Dream to Control: Learning Behaviors by Latent Imagination
+
+Danijar Hafner ††thanks: Correspondence to: Danijar Hafner <mail@danijar.com>. Affiliation: University of Toronto Affiliation: Google Brain Timothy Lillicrap Affiliation: DeepMind Jimmy Ba Affiliation: University of Toronto Mohammad Norouzi Affiliation: Google Brain
+
+###### Abstract
+
+Learned world models summarize an agent’s experience to facilitate learning complex behaviors. While learning world models from high-dimensional sensory inputs is becoming feasible through deep learning, there are many potential ways for deriving behaviors from them. We present Dreamer, a reinforcement learning agent that solves long-horizon tasks from images purely by latent imagination. We efficiently learn behaviors by propagating analytic gradients of learned state values back through trajectories imagined in the compact state space of a learned world model. On 20 challenging visual control tasks, Dreamer exceeds existing approaches in data-efficiency, computation time, and final performance.
+
+## 1 Introduction
+
+Figure 1: Dreamer learns a world model from past experience and efficiently learns farsighted behaviors in its latent space by backpropagating value estimates back through imagined trajectories.
+
+Intelligent agents can achieve goals in complex environments even though they never encounter the exact same situation twice. This ability requires building representations of the world from past experience that enable generalization to novel situations. World models offer an explicit way to represent an agent’s knowledge about the world in a parametric model that can make predictions about the future.
+
+When the sensory inputs are high-dimensional images, latent dynamics models can abstract observations to predict forward in compact state spaces (Watter et al., 2015, Oh et al., 2017, Gregor et al., 2019). Compared to predictions in image space, latent states have a small memory footprint that enables imagining thousands of trajectories in parallel. Learning effective latent dynamics models is becoming feasible through advances in deep learning and latent variable models (Krishnan et al., 2015, Karl et al., 2016, Doerr et al., 2018, Buesing et al., 2018).
+
+Behaviors can be derived from dynamics models in many ways. Often, imagined rewards are maximized with a parametric policy (Sutton, 1991, Ha and Schmidhuber, 2018, Zhang et al., 2019) or by online planning (Chua et al., 2018, Hafner et al., 2018). However, considering only rewards within a fixed imagination horizon results in shortsighted behaviors (Wang et al., 2019). Moreover, prior work commonly resorts to derivative-free optimization for robustness to model errors (Ebert et al., 2017, Chua et al., 2018, Parmas et al., 2019), rather than leveraging analytic gradients offered by neural network dynamics (Henaff et al., 2019, Srinivas et al., 2018).
+
+We present Dreamer, an agent that learns long-horizon behaviors from images purely by latent imagination. A novel actor critic algorithm accounts for rewards beyond the imagination horizon while making efficient use of the neural network dynamics. For this, we predict state values and actions in the learned latent space as summarized in Figure 1. The values optimize Bellman consistency for imagined rewards and the policy maximizes the values by propagating their analytic gradients back through the dynamics.
+
+In comparison to actor critic algorithms that learn online or by experience replay (Lillicrap et al., 2015, Mnih et al., 2016, Schulman et al., 2017, Haarnoja et al., 2018, Lee et al., 2019), world models can interpolate past experience and offer analytic gradients of multi-step returns for efficient policy optimization.
+
+The key contributions of this paper are summarized as follows:
+
+•
+
+Learning long-horizon behaviors by latent imagination Model-based agents can be shortsighted if they use a finite imagination horizon. We approach this limitation by predicting both actions and state values. Training purely by imagination in a latent space lets us efficiently learn the policy by propagating analytic value gradients back through the latent dynamics.
+
+•
+
+Empirical performance for visual control We pair Dreamer with existing representation learning methods and evaluate it on the DeepMind Control Suite with image inputs, illustrated in Figure 2. Using the same hyper parameters for all tasks, Dreamer exceeds previous model-based and model-free agents in terms of data-efficiency, computation time, and final performance.
+
+- G Continuous Control Scores
+
+## 2 Control with World Models
+
+Figure 2: Image observations for 5 of the 20 visual control tasks used in our experiments. The tasks pose a variety of challenges including contact dynamics, sparse rewards, many degrees of freedom, and 3D environments. Several of these tasks could previously not be solved through world models.
+
+(a) Cup
+
+(b) Acrobot
+
+(c) Hopper
+
+(d) Walker
+
+(e) Quadruped
+
+### Reinforcement learning
+
+We formulate visual control as a partially observable Markov decision process (POMDP) with discrete time step $t\in[1;T]$ , continuous vector-valued actions $a_{t}\sim p(a_{t}\mido_{\leq t},a_{<t})$ generated by the agent, and high-dimensional observations and scalar rewards $o_{t},r_{t}\sim p(o_{t},r_{t}\mido_{<t},a_{<t})$ generated by the unknown environment. The goal is to develop an agent that maximizes the expected sum of rewards $\smash{\mathbb{\operatorname{E}}_{p}\big(\sum_{t=1}^{T}r_{t}\big)}$ . Figure 2 shows a selection of our tasks.
+
+### Agent components
+
+The classical components of agents that learn in imagination are dynamics learning, behavior learning, and environment interaction (Sutton, 1991). In the case of Dreamer, the behavior is learned by predicting hypothetical trajectories in the compact latent space of the world model. As outlined in Figure 3 and detailed in Algorithm 1, Dreamer performs the following operations throughout the agent’s life time, either interleaved or in parallel:
+
+•
+
+Learning the latent dynamics model from the dataset of past experience to predict future rewards from actions and past observations. Any learning objective for the world model can be incorporated with Dreamer. We review existing methods for learning latent dynamics in Section 4.
+
+•
+
+Learning action and value models from predicted latent trajectories, as described in Section 3. The value model optimizes Bellman consistency for imagined rewards and the action model is updated by propagating gradients of value estimates back through the neural network dynamics.
+
+•
+
+Executing the learned action model in the world to collect new experience for growing the dataset.
+
+### Latent dynamics
+
+Dreamer uses a latent dynamics model that consists of three components. The representation model encodes observations and actions to create continuous vector-valued model states $s_{t}$ with Markovian transitions (Watter et al., 2015, Zhang et al., 2019, Hafner et al., 2018). The transition model predicts future model states without seeing the corresponding observations that will later cause them. The reward model predicts the rewards given the model states,
+
+| $$\displaystyle\begin{aligned} \makebox[120.00018pt][l]{Representation model:}&&&p(s_{t}\mids_{t-1},a_{t-1},o_{t})\\ \makebox[120.00018pt][l]{Transition model:}&&&q(s_{t}\mids_{t-1},a_{t-1})\\ \makebox[120.00018pt][l]{Reward model:}&&&q(r_{t}\mids_{t}).\end{aligned}$$ | (1) |
+| --- | --- |
+
+We use $p$ for distributions that generate samples in the real environment and $q$ for their approximations that enable latent imagination. Specifically, the transition model lets us predict ahead in the compact latent space without having to observe or imagine the corresponding images. This results in a low memory footprint and fast predictions of thousands of imagined trajectories in parallel.
+
+The model mimics a non-linear Kalman filter (Kalman, 1960), latent state space model, or HMM with real-valued states. However, it is conditioned on actions and predicts rewards, allowing the agent to imagine the outcomes of potential action sequences without executing them in the environment.
+
+## 3 Learning Behaviors by Latent Imagination
+
+Figure 3: Components of Dreamer. (a) From the dataset of past experience, the agent learns to encode observations and actions into compact latent states (), for example via reconstruction, and predicts environment rewards (). (b) In the compact latent space, Dreamer predicts state values () and actions () that maximize future value predictions by propagating gradients back through imagined trajectories. (c) The agent encodes the history of the episode to compute the current model state and predict the next action to execute in the environment. See Algorithm 1 for pseudo code of the agent.
+
+(a) Learn dynamics from experience
+
+(b) Learn behavior in imagination
+
+(c) Act in the environment
+
+Algorithm 1 Dreamer
+
+Initialize dataset $\mathcal{D}$ with $S$ random seed episodes. ;
+
+Initialize neural network parameters $\theta,\phi,\psi$ randomly. ;
+
+while not converged do
+
+for update step $c=1..C$ do
+
+// Dynamics learning
+
+Draw $B$ data sequences $\{(a_{t},o_{t},r_{t})\}_{t=k}^{k+L}\sim\mathcal{D}$ . ;
+
+Compute model states $s_{t}\sim p_{\theta}(s_{t}\mids_{t-1},a_{t-1},o_{t})$ . ;
+
+Update $\theta$ using representation learning. ;
+
+// Behavior learning
+
+Imagine trajectories $\{(s_{\tau},a_{\tau})\}_{\tau=t}^{t+H}$ from each $s_{t}$ . ;
+
+Predict rewards $\mathbb{\operatorname{E}}\big(q_{\theta}(r_{\tau}\mids_{\tau})\big)$ and values $v_{\psi}(s_{\tau}).$ ;
+
+Compute value estimates $\mathrm{V}_{\mathrm{\lambda}}(s_{\tau})$ via Equation 6. ;
+
+Update $\phi\leftarrow\phi+\alpha\nabla_{\phi}\sum_{\tau=t}^{t+H}\mathrm{V}_{\mathrm{\lambda}}(s_{\tau})$ . ;
+
+Update $\makebox[5.95834pt][l]{$\psi$}\leftarrow\makebox[5.95834pt][l]{$\psi$}-\alpha\nabla_{\psi}\sum_{\tau=t}^{t+H}\frac{1}{2}\big\|v_{\psi}(s_{\tau})\!\shortminus\!\mathrm{V}_{\mathrm{\lambda}}(s_{\tau})\big\|^{2}$ .
+
+// Environment interaction
+
+$o_{1}\leftarrow\texttt{env.reset()}$ ;
+
+for time step $t=1..T$ do
+
+Compute $s_{t}\sim p_{\theta}(s_{t}\mids_{t-1},a_{t-1},o_{t})$ from history. ;
+
+Compute $a_{t}\sim q_{\phi}(a_{t}\mids_{t})$ with the action model. ;
+
+Add exploration noise to action. ;
+
+$r_{t},o_{t+1}\leftarrow\texttt{env.step(}a_{t}\texttt{)}.$ ;
+
+Add experience to dataset $\mathcal{D}\leftarrow\mathcal{D}\cup\{(o_{t},a_{t},r_{t})_{t=1}^{T}\}.$ ;
+
+Model components Representation $p_{\theta}(s_{t}\mids_{t\text{-}1},a_{t\text{-}1},o_{t})$ Transition $q_{\theta}(s_{t}\mids_{t\text{-}1},a_{t\text{-}1})$ Reward $q_{\theta}(r_{t}\mids_{t})$ Action $q_{\phi}(a_{t}\mids_{t})$ Value $v_{\psi}(s_{t})$ Hyper parameters Seed episodes $S$ Collect interval $C$ Batch size $B$ Sequence length $L$ Imagination horizon $H$ Learning rate $\alpha$
+
+Figure 4: Imagination horizons. We compare the final performance of Dreamer, learning an action model without value prediction, and online planning using PlaNet. Learning a state value model to estimate rewards beyond the imagination horizon makes Dreamer more robust to the horizon length. The agents use pixel reconstruction for representation learning and an action repeat of $R=2$ .
+
+Dreamer learns long-horizon behaviors in the compact latent space of a learned world model by efficiently leveraging the neural network latent dynamics. For this, we propagate stochastic gradients of multi-step returns through neural network predictions of actions, states, rewards, and values using reparameterization. This section describes the main contribution of our paper.
+
+### Imagination environment
+
+The latent dynamics define a Markov decision process (Sutton, 1991, MDP;) that is fully observed because the compact model states $s_{t}$ are Markovian. We denot

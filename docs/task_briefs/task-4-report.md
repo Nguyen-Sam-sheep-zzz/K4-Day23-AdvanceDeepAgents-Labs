@@ -1,0 +1,9 @@
+# Task 4 implementation report
+
+Implemented the sandbox research runner in `research.py`. The CLI checks setup and uploaded scripts before invoking the lead agent with `recursion_limit=1000`. It runs the provided citation finalizer and the citation validator again after the agent returns, requiring a zero exit code and validator `OK:` output. All operations stay inside `open_sandbox()` so its cleanup runs on success and failure. Runtime errors are redacted; progress output contains stage names and tool names only.
+
+The downloaded report and source JSON are checked before publication. The gate requires UTF-8, the prescribed English section headings with 3–6 theme headings, valid citation structure, sequential full source records with matching arXiv/Hugging Face IDs and URLs, at least three distinct retrieval tags, and at least three observed lead `task` calls. The original report and source bytes are preserved. Metadata records the observed lead messages, token scope, source tags, and actual researcher/checker call counts. Staged replacement rolls back a pre-existing report trio if any destination write fails.
+
+The content gate also rejects empty Background, theme, and Trends sections, and requires 3–5 Markdown bullets in TL;DR with a numeric inline citation on each. This checks the report's visible structure; claim support still needs a source audit.
+
+Tests were written against the original stubs first (red), then run with the project virtual environment. The 12 Task 4 offline tests cover malformed and missing inputs, empty report sections, TL;DR bullet counts and citations, command and agent failures, cleanup, metadata, bytes, and write rollback. The complete offline suite passed: 61 tests (`.venv\Scripts\python.exe -m unittest discover -s tests -q`). Live topic results are a separate Task 5 gate.

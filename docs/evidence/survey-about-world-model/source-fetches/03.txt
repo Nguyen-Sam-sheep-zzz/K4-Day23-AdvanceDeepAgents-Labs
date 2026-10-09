@@ -1,0 +1,84 @@
+# DayDreamer: World Models forPhysical Robot Learning
+URL: https://arxiv.org/abs/2206.14176
+Published: 2022-06-28
+
+DayDreamer: World Models forPhysical Robot Learning
+
+# DayDreamer: World Models for Physical Robot Learning
+
+ Philipp Wu* Alejandro Escontrela* Danijar Hafner* Affiliation: Ken Goldberg Pieter Abbeel Affiliation: University of California, Berkeley Affiliation: *Equal contribution 
+
+###### Abstract
+
+To solve tasks in complex environments, robots need to learn from experience. Deep reinforcement learning is a common approach to robot learning but requires a large amount of trial and error to learn, limiting its deployment in the physical world. As a consequence, many advances in robot learning rely on simulators. On the other hand, learning inside of simulators fails to capture the complexity of the real world, is prone to simulator inaccuracies, and the resulting behaviors do not adapt to changes in the world. The Dreamer algorithm has recently shown great promise for learning from small amounts of interaction by planning within a learned world model, outperforming pure reinforcement learning in video games. Learning a world model to predict the outcomes of potential actions enables planning in imagination, reducing the amount of trial and error needed in the real environment. However, it is unknown whether Dreamer can facilitate faster learning on physical robots. In this paper, we apply Dreamer to 4 robots to learn online and directly in the real world, without any simulators. Dreamer trains a quadruped robot to roll off its back, stand up, and walk from scratch and without resets in only 1 hour. We then push the robot and find that Dreamer adapts within 10 minutes to withstand perturbations or quickly roll over and stand back up. On two different robotic arms, Dreamer learns to pick and place multiple objects directly from camera images and sparse rewards, approaching human performance. On a wheeled robot, Dreamer learns to navigate to a goal position purely from camera images, automatically resolving ambiguity about the robot orientation. Using the same hyperparameters across all experiments, we find that Dreamer is capable of online learning in the real world, which establishes a strong baseline. We release our infrastructure for future applications of world models to robot learning. Videos are available on the project website: https://danijar.com/daydreamer
+
+(a) A1 Quadruped Walk ing
+
+(b) UR5 Visual Pick Plac e
+
+(c) XArm Visual Pick Pl ace
+
+(d) Sphero Navigation
+
+Figure 1: To study the applicability of Dreamer for sample-efficient robot learning, we apply the algorithm to learn robot locomotion, manipulation, and navigation tasks from scratch in the real world on 4 robots, without simulators. The tasks evaluate a diverse range of challenges, including continuous and discrete actions, dense and sparse rewards, proprioceptive and camera inputs, as well as sensor fusion of multiple input modalities. Learning successfully using the same hyperparameters across all experiments, Dreamer establishes a strong baseline for real world robot learning.
+
+## 1 Introduction
+
+Figure 2: Dreamer follows a simple pipeline for online learning on robot hardware without simulators. The current learned policy collects experience on the robot. This experience is added to the replay buffer. The world model is trained on replayed off-policy sequences through supervised learning. An actor critic algorithm optimizes a neural network policy from imagined rollouts in the latent space of the world model. We parallelize data collection and neural network learning so learning steps can continue while the robot is moving and to enable low-latency action computation.
+
+Teaching robots to solve complex tasks in the real world is a foundational problem of robotics research. Deep reinforcement learning (RL) offers a popular approach to robot learning that enables robots to improve their behavior over time through trial and error. However, current algorithms require too much interaction with the environment to learn successful behaviors, making them impractical for many real world tasks. Recently, modern world models have shown great promise for data efficient learning in simulated domains and video games (Hafner et al., 2019, Hafner et al., 2020). Learning world models from past experience enables robots to imagine the future outcomes of potential actions, reducing the amount of trial and error in the real environment needed to learn successful behaviors.
+
+While learning accurate world models can be challenging, they offer compelling properties for robot learning. By predicting future outcomes, world models allow for planning and behavior learning given only small amounts of real world interaction (Gal et al., 2016, Ebert et al., 2018). Moreover, world models summarize general dynamics knowledge about the environment that, once learned, could be reused for a wide range of downstream tasks (Sekar et al., 2020). World models also learn representations that fuse multiple sensor modalities and integrate them into latent states, removing the need for manual state estimation. Finally, world models generalize well from available offline data (Yu et al., 2021), which could further accelerate learning in the real world.
+
+Despite the promises of world models, learning accurate world models for the real world is a big open challenge. In this paper, we leverage recent advances of the Dreamer world model for training a variety of robots in the most straight-forward and fundamental problem setting: online reinforcement learning in the real world, without simulators or demonstrations. As shown in Figure 2, Dreamer learns a world model from a replay buffer of past experience, learns behaviors from rollouts imagined in the latent space of the world model, and continuously interacts with the environment to explore and improve its behaviors. Our aim is to push the limits of robot learning directly in the real world and offer a robust platform to enable future work that develops the benefits of world models for robot learning. The key contributions of this paper are summarized as follows:
+
+- $∙\bullet$
+
+Dreamer on Robots We apply Dreamer to 4 robots, demonstrating successful learning directly in the real world, without introducing new algorithms. The tasks cover a range of challenges, including different action spaces, sensory modalities, and reward structures.
+- $∙\bullet$
+
+Walking in 1 Hour We teach a quadruped from scratch in the real world to roll off its back, stand up, and walk in only 1 hour. Afterwards, we find that the robot adapts to being pushed within 10 minutes, learning to withstand pushes or quickly roll over and get back on its feet.
+- $∙\bullet$
+
+Visual Pick and Place We train robotic arms to pick and place objects from sparse rewards, which requires localizing objects from pixels and fusing images with proprioceptive inputs. The learned behavior outperforms model-free agents and approaches human performance.
+- $∙\bullet$
+
+Open Source We publicly release the software infrastructure for all our experiments, which supports different action spaces and sensory modalities, offering a flexible platform for future research of world models for robot learning in the real world.
+
+(a) World Model Learning
+
+(b) Behavior Learning
+
+Figure 3: Neural Network Training We leverage the Dreamer algorithm (Hafner et al., 2019, Hafner et al., 2020) for fast robot learning in real world. Dreamer consists of two neural network components. Left: The world model follows the structure of a deep Kalman filter that is trained on subsequences drawn from the replay buffer. The encoder fuses all sensory modalities into discrete codes. The decoder reconstructions the inputs from the codes, providing a rich learning signal and enabling human inspection of model predictions. A recurrent state-space model (RSSM) is trained to predict future codes given actions, without observing intermediate inputs. Right: The world model enables massively parallel policy optimization from imagined rollouts in the compact latent space using a large batch size, without having to reconstruct sensory inputs. Dreamer trains a policy network and value network from the imagined rollouts and a learned reward function. 
+
+## 2 Approach
+
+We leverage the Dreamer algorithm (Hafner et al., 2019, Hafner et al., 2020) for online learning on physical robots, without the need for simulators. This section summarizes the general algorithm, as well as details on the training architecture and sensor fusion needed for the robotics experiments. Figure 2 shows an overview of the approach. Dreamer learns a world model from a replay buffer of past experiences, uses an actor critic algorithm to learn behaviors from trajectories predicted by the learned model, and deploys its behavior in the environment to continuously grow the replay buffer. We decouple learning updates from data collection to meet latency requirements and to enable fast training without waiting for the environment. In our implementation, a learner thread continuously trains the world model and actor critic behavior, while an actor thread in parallel computes actions for environment interaction.
+
+#### World Model Learning
+
+The world model is a deep neural network that learns to predict the environment dynamics, as shown in Figure 3 (left). Because sensory inputs can be large images, we predict future representations rather than future inputs. This reduces accumulating errors and enables massively parallel training with a large batch size. Thus, the world model can be thought of as a fast simulator of the environment that the robot learns autonomously, starting from a blank slate and continuously improving its model as it explores the real world. The world model is based on the Recurrent State-Space Model (Hafner et al., 2018, RSSM;), which consists of four components:
+
+$Encoder Network:\displaystyle\text{Encoder Network:}$
+
+$encθ​(st|st−1,at−1,xt)\displaystyle\mathrm{enc}_{\theta}(s_{t}\;|\;s_{t-1},a_{t-1},x_{t})\quad$
+
+$Decoder Network:\displaystyle\text{Decoder Network:}$
+
+$decθ​(st)≈xt\displaystyle\mathrm{dec}_{\theta}(s_{t})\approx x_{t}$
+
+(1)
+
+$Dynamics Network:\displaystyle\text{Dynamics Network:}$
+
+$dynθ​(st|st−1,at−1)\displaystyle\mathrm{dyn}_{\theta}(s_{t}\;|\;s_{t-1},a_{t-1})\quad$
+
+$Reward Network:\displaystyle\text{Reward Network:}$
+
+$rewθ​(st+1)≈rt\displaystyle\mathrm{rew}_{\theta}(s_{t+1})\approx r_{t}$
+
+Physical robots are often equipped with multiple sensors of different modalities, such as proprioceptive joint readings, force sensors, and high-dimensional inputs such as RGB and depth camera images. The encoder network fuses all sensory inputs $xtx_{t}$ together into the stochastic representations $ztz_{t}$. The dynamics model learns to predict the sequence of stochastic representations by using its recurrent state $hth_{t}$. The decoder reconstructs the sensory inputs to provide a rich signal for learning representations and enables human inspection of model predictions, but is not needed while learning behaviors from latent rollouts. In our experiments, the robot has to discover task rewards by interacting with the real world, which the reward network learns to predict. Using manually specified rewards as a function of the decoded sensory inputs is also possible. We optimize all components of the world model jointly by stochastic backpropagation (Kingma and Welling, 2013, Rezende et al., 2014).
+
+#### Actor Critic Learning
+
+While the world model represents task-agnostic knowledge about the dynamics, the actor critic algorithm learns a behavior that is specific to the task at hand. As shown in Figure 3 (right), we learn behaviors from rollouts that are predicted in the latent space of the world model, without decoding observations. This enables massively parallel behavior learning with typical batch sizes of 16K on a single GPU, similar to specialized modern simulators (Makoviychuk et al., 

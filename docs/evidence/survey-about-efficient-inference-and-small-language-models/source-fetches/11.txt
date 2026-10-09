@@ -1,0 +1,167 @@
+# SmoothQuant: Accurate and Efficient  Post-Training Quantization for Large Language Models
+URL: https://arxiv.org/pdf/2211.10438
+
+### SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models
+
+Guangxuan Xiao * 1 Ji Lin * 1 Mickael Seznec 2 Hao Wu 2 Julien Demouth 2 Song Han 1 https://github.com/mit-han-lab/smoothquant
+
+##### Abstract
+
+Large language models (LLMs) show excel lent performance but are compute- and memory intensive. Quantization can reduce memory and accelerate inference. However, existing methods cannot maintain accuracy and hardware efficiency at the same time. We propose SmoothQuant, a training-free, accuracy-preserving, and general purpose post-training quantization (PTQ) solution to enable 8-bit weight, 8-bit activation (W8A8) quantization for LLMs. Based on the fact that weights are easy to quantize while activations are not, SmoothQuant smooths the activation outliers by offline migrating the quantization difficulty from activations to weights with a mathemati cally equivalent transformation. SmoothQuant enables an INT8 quantization of both weights and activations for all the matrix multiplications in LLMs, including OPT, BLOOM, GLM, MT-NLG, Llama-1/2, Falcon, Mistral, and Mixtral models. We demonstrate up to 1.56× speedup and 2×memory reduction for LLMs with negligible loss in accuracy. SmoothQuant enables serving 530B LLM within a single node. Our work offers a turn-key solution that reduces hardware costs and democratizes LLMs.
+
+##### 1 Introduction
+
+Large-scale language models (LLMs) show excellent per 
+formance on various tasks (Brown et al., 2020a; Zhang 
+et al., 2022). However, serving LLMs is budget and energy 
+consuming due to their gigantic model size. For example, 
+the GPT-3 (Brown et al., 2020a) model contains 175B pa 
+rameters, which will consume at least 350GB of memory to 
+*Equal contribution 1Massachusetts Institute of Technology 
+2NVIDIA. Correspondence to: Guangxuan Xiao <xgx@mit.edu>, 
+Ji Lin <jilin@mit.edu>. 
+Proceedings of the 40 th International Conference on Machine 
+Learning, Honolulu, Hawaii, USA. PMLR 202, 2023. Copyright 
+2023 by the author(s). 
+
+Figure 1: The model size of large language models is devel oping at a faster pace than the GPU memory in recent years, leading to a big gap between the supply and demand for memory. Quantization and model compression techniques can help bridge the gap.
+
+store and run in FP16, requiring 8× 48GB A6000 GPUs or 5× 80GB A100 GPUs just for inference. Due to the huge computation and communication overhead, the inference latency may also be unacceptable to real-world applica tions. Quantization is a promising way to reduce the cost of LLMs (Dettmers et al., 2022; Yao et al., 2022). By quantiz ing the weights and activations with low-bit integers, we can reduce GPU memory requirements, in size and bandwidth, and accelerate compute-intensive operations (i.e., GEMM* in linear layers, BMM† in attention). For instance, INT8 quantization of weights and activations can halve the GPU memory usage and nearly double the throughput of matrix multiplications compared to FP16. However, unlike CNN models or smaller transformer mod els like BERT (Devlin et al., 2019), the activations of LLMs are difficult to quantize. When we scale up LLMs beyond 6.7B parameters, systematic outliers with large magnitude will emerge in activations (Dettmers et al., 2022), leading to large quantization errors and accuracy degradation. Ze roQuant (Yao et al., 2022) applies dynamic per-token ac tivation quantization and group-wise weight quantization (defined in Figure 3 Sec. 2). It can be implemented effi-*General matrix multiply †Batch matrix multiply
+
+SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Modelsoutlier
+
+low effective bits maxCi(X)
+
+#### maxCi(W)
+
+#### a x maxCi(X̂) maxCi(Ŵ) smoothed
+
+(a) Original (b) Smoothed
+
+hard to quantize very easy to quantize easy to quantize easy to quantize determines quant. range |X| |W|
+
+s ̂ |X| ̂ |W| smoothed
+
+(a) Original (b) SmoothQuant
+
+hard to quantize very easy to quantize easy to quantize easy to quantize
+
+outlier
+
+low effective bits q u a n t . l e v e l s10 0.1
+
+1 1
+
+0
+
+0
+
+0
+
+0
+
+migrate difficulty
+
+Figure 2: SmoothQuant’s intuition: the activation X is hard to quantize because outliers stretch the quantization range, leaving few effective bits for most values. We migrate the scale variance from activations to weights W during offline to reduce the quantization difficulty of activations. The smoothed activation Xˆ and the adjusted weight Wˆ are both easy to quantize.
+
+ciently and delivers good accuracy for GPT-3-350M and GPT-J-6B. However, it can not maintain the accuracy for the large OPT model with 175 billion parameters (see Sec tion 5.2). LLM.int8() (Dettmers et al., 2022) addresses that accuracy issue by further introducing a mixed-precision decomposition (i.e., it keeps outliers in FP16 and uses INT8 for the other activations). However, it is hard to imple ment the decomposition efficiently on hardware accelera tors. Therefore, deriving an efficient, hardware-friendly, and preferably training-free quantization scheme for LLMs that would use INT8 for all the compute-intensive operations remains an open challenge. We propose SmoothQuant, an accurate and efficient post-training quantization (PTQ) solution for LLMs. SmoothQuant relies on a key observation: even if activations are much harder to quantize than weights due to the presence of outliers (Dettmers et al., 2022), different tokens exhibit similar variations across their channels. Based on this obser vation, SmoothQuant offline migrates the quantization diffi culty from activations to weights (Figure 2). SmoothQuant proposes a mathematically equivalent per-channel scaling transformation that significantly smooths the magnitude across the channels, making the model quantization-friendly. Since SmoothQuant is compatible with various quantization schemes, we implement three efficiency levels of quantiza tion settings for SmoothQuant (see Table 2, O1-O3). Exper iments show that SmoothQuant is hardware-efficient: it can maintain the performance of OPT-175B (Zhang et al., 2022), BLOOM-176B (Scao et al., 2022) , GLM-130B (Zeng et al., 2022), and MT-NLG 530B (Smith et al., 2022), leading to up to 1.51× speed up and 1.96× memory saving on PyTorch. SmoothQuant is easy to implement. We inte grate SmoothQuant into FasterTransformer, the state-of-the art transformer serving framework, achieving up to 1.56×speedup and halving the memory usage compared with FP16. Remarkably, SmoothQuant allows serving large mod els like OPT-175B using only half number of GPUs com pared to FP16 while being faster, and enabling the serving of a 530B model within one 8-GPU node. Our work democ ratizes the use of LLMs by offering a turnkey solution to reduce the serving cost. We hope SmoothQuant can inspire greater use of LLMs in the future.
+
+##### 2 Preliminaries
+
+Quantization maps a high-precision value into discrete levels. We study integer uniform quantization (Jacob et al., 2018) (specifically INT8) for better hardware support and efficiency. The quantization process can be expressed as:
+
+X¯ INT8 = ⌈
+
+XFP16 ∆ ⌋ , ∆ = max(| X| ) 2 N− 1 − 1 , (1)
+
+where X is the floating-point tensor, X¯ is the quantized counterpart, ∆ is the quantization step size, ⌈·⌋ is the round ing function, and N is the number of bits (8 in our case). Here we assume the tensor is symmetric at 0 for simplicity; the discussion is similar for asymmetric cases (e.g., after ReLU) by adding a zero-point (Jacob et al., 2018). Such quantizer uses the maximum absolute value to calcu late ∆ so that it preserves the outliers in activation, which are found to be important for accuracy (Dettmers et al., 2022). We can calculate ∆ offline with the activations of some calibration samples, what we call static quantization. We can also use the runtime statistics of activations to get ∆, what we call dynamic quantization. As shown in Figure 3, quantization has different granularity levels. The per-tensor quantization uses a single step size for the entire matrix. We can further enable finer-grained quantization by using dif ferent quantization step sizes for activations associated with each token (per-token quantization) or each output channel of weights (per-channel quantization). A coarse-grained version of per-channel quantization is to use different quanti zation steps for different channel groups, called group-wise quantization (Shen et al., 2020; Yao et al., 2022). For a linear layer in Transformers (Vaswani et al., 2017) Y = X · W, Y ∈ R T × Co , X ∈ R T × Ci,W ∈ R Ci× Co , where T is the number of tokens, Ci is the input channel, and Co is the output channel (see Figure 3, we omit the batch dimension for simplicity), we can reduce the storage by half compared to FP16 by quantizing the weights to INT8. However, to speed up the inference, we need to quantize both weights and activations into INT8 (i.e., W8A8) to utilize the integer kernels (e.g., INT8 GEMM), which are
+
+##### SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models
+
+sCo[1×C0]
+
+sW[1] sX[1] sCo[1] sX[1]
+
+per-tensor quant. per-tensor quant.
+
+(a) per-tensor quantization
+
+sT[T×1]
+
+sCo[1×C0]
+
+per-token quant. per-channel quant. (b) per-token + per-channel quantization
+
+## X * W
+
+T
+
+Ci
+
+Co
+
+Ci
+
+sW[1] sX[1]
+
+per-tensor quant. per-tensor quant.
+
+(a) per-tensor quantization
+
+sT[T×1]
+
+## X * W
+
+T
+
+Ci
+
+Co
+
+Ci
+
+sCo[1×C0]
+
+per-token quant. per-channel quant. (b) per-token + per-channel quantization
+
+## X * W
+
+T
+
+Ci
+
+Co
+
+Ci
+
+ΔW[1]
+
+ΔX[1]
+
+per-tensor quant. per-tensor quant.
+
+(a) per-tensor quantization
+
+ΔX [T×1]
+
+## X * W
+
+T
+
+Ci
+
+Co
+
+Ci
+
+ΔW [1×C0]
+
+per-token quant. per-channel quant. (b) per-token + per-channel quantization Figure 3: Definition of per-tensor, per-token, and per channel quantization. Per-tensor quantization is the most efficient to implement. For vector-wise quantization to ef ficiently utilize the INT8 GEMM kernels, we can only use scaling factors from the outer dimensions (i.e., token di mension T and out channel dimension Co) but not inner dimension (i.e., in channel dimension Ci).
+
+supported by a wide range of hardware (e.g., NVIDIA GPUs, Intel CPUs, Qualcomm DSPs, etc.).
+
+##### 3 Review of Quantization Difficulty
+
+LLMs are notoriously difficult to quantize due to the outliers in the activations (Dettmers et al., 2022; Wei et al., 2022; Bondarenko et al., 2021). We first review the difficulties of activation quantization and look for a pattern amongst outliers. We visualize the input activations and the weights of a linear layer that has a large quantization error in Figure 4 (left). We can find several patterns that motivate our method: 1. Activations are harder to quantize than weights. The weight distribution is quite uniform and flat, which is easy to quantize. Previous work has shown that quantizing the weights of LLMs with INT8 or even with INT4 does not degrade accuracy (Dettmers et al., 2022; Yao et al., 2022; Zeng et al., 2022), which echoes our observation. 2. Outliers make activation quantization difficult. The scale of outliers in activations is ∼ 100× larger than most of the activation values. In the case of per-tensor quantization (Equation 1), the large outliers dominate the maximum mag nitude measurement, leading to low effective quantization bits/levels (Figure 2) for non-outlier channels: suppose the maximum magnitude of channel i is mi, and the maximum value of the whole matrix is m, the effective quantization levels of channel i is 2 8 · mi/m. For non-outlier channels, the effective quantization levels would be very small (2-3), leading to large quantization errors. 3. Outliers persist in fixed channels. Outliers appear
+
+Table 1: Among different activation quantization schemes, only per-channel quantization (Bondarenko et al., 2021) pre serves the accuracy, but it is not compatible (marked in gray) with 

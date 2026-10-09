@@ -1,0 +1,145 @@
+# WorldModelBench: Judging Video Generation Models As World Models
+URL: https://papers.neurips.cc/paper_files/paper/2025/file/4ec03ed08a3fcb59e1c815b5598beff1-Paper-Datasets_and_Benchmarks_Track.pdf
+
+### WorldModelBench: Judging Video Generation Models As World Models
+
+Dacheng Li 1∗ Yunhao Fang 2∗ Yukang Chen 3 Shuo Yang 1 Shiyi Cao 1
+
+Justin Wong 1 Michael Luo 1 Xiaolong Wang 2,3 Hongxu Yin 3
+
+Joseph E. Gonzalez 1 Ion Stoica 1 Song Han 3,4 Yao Lu 3 1UC Berkeley 2UC San Diego 3NVIDIA 4MIT
+
+#### Abstract
+
+Video generation models have rapidly progressed, positioning themselves as video world models capable of supporting decision-making applications like robotics and autonomous driving. However, current benchmarks fail to rigorously evaluate these claims, focusing only on general video quality, ignoring important factors to world models such as physics adherence. To bridge this gap, we propose WorldModel Bench, a benchmark designed to evaluate the world modeling capabilities of video generation models in application-driven domains. WorldModelBench offers two key advantages: (1) Against to nuanced world modeling violations: By incor porating instruction-following and physics-adherence dimensions, WorldModel Bench detects subtle violations, such as irregular changes in object size that breach the mass conservation law—issues overlooked by prior benchmarks. (2) Aligned with large-scale human preferences: We crowd-source 67K human labels to accurately measure 14 frontier models. Using our high-quality human labels, we further fine-tune an accurate judger to automate the evaluation procedure, achieving 9.9% lower error in predicting world modeling violations than GPT-4o with 2B parameters. In addition, we demonstrate that training to align human annotations by maximizing the rewards from the judger noticeably improve the world modeling capability. The dataset is hosted in HuggingFace at https://huggingface. co/datasets/Efficient-Large-Model/worldmodelbench. The code to run evaluation is available at https://github.com/WorldModelBench-Team/ WorldModelBench.
+
+#### 1 Introduction
+
+Video generation models have achieved remarkable success in creating high-fidelity and realistic 
+videos [24, 8, 44, 57, 13, 52, 62, 42, 29, 18]. Beyond generating visually compelling content, these 
+models are increasingly seen as potential video world models. Video world models simulate feasible 
+future frames based on given text and image instruction [31, 42, 1]. These future frames obey 
+real-world dynamics and unlock grounded planning on decision-making tasks such as robotics, 
+autonomous driving, and human body prediction [6, 7, 1, 63, 9, 19, 10]. 
+Despite the potential, the ability of video generation models to act as reliable world models remains 
+speculative. Existing benchmarks primarily evaluate on general video quality such as temporal 
+∗Equal contribution. Part of the work was done while Dacheng Li and Yunhao Fang were interns 
+at NVIDIA. Correspondence to: dacheng177@berkeley.edu, yuf026@ucsd.edu, songhan@mit.edu, 
+jasonlu@nvidia.com. 
+
+39th Conference on Neural Information Processing Systems (NeurIPS 2025) Track on Datasets and Benchmarks.
+
+Robotics The robotic arm slides a yellow cloth along the wooden surface. Driving The autonomous vehicle yields while waiting for the intersection to clear. Industry Water is dispensed into plastic bottles on rotary filling machines.
+
+Gaming The player carefully turns the corner, aiming their gun at an approaching enemy.
+
+Human Activities The person touches their own hand with the other hand.
+
+Animation The elf girl speaks to someone off-screen, with a concerned expression. Natural The grasshopper jumps from the ground into the air amidst the vegetation.
+
+Video Generator
+
+Improve by reward gradients
+
+The hand touches the top of the other hand.
+
+Condition frame
+
+Instruction Following Score Common Sense Score Physics Adherence Score
+
+Domains and examples in WorldModelBench
+
+Judger
+
+Example workflow
+
+Figure 2: Overview of WorldModelBench. WorldModelBench judges the world modeling capabil ity of video generation models across diverse application-driven domains. On WorldModelBench, a model generates a video based on text and optionally image conditions and is scored along common sense, instruction following, and physics adherence dimensions. We collect 67K human labels to evaluate 14 frontier models. WorldModelBench is paired with a fine-tuned judger, providing fine grained feedback for models, and training to aligns its reward improves world modeling capabilities. consistency and aesthetic coherence [26, 36, 54]. While these measures are necessary for video world models, they are inadequate. Importantly, they do not capture real-world dynamics, e.g. adhere to basic real-world physics (Figure 1). While efforts like VideoPhy [4] introduce physics-based evaluations, their focus on interactions between daily objects overlooks broader application-driven scenarios. To address the gap, we introduce WorldModelBench to judge the world modeling capability of video generation models. WorldModelBench consists of 350 image and text condition pairs, ranging over 7 application driven domains, 56 diverse subdomains, and provides support for both text-to video (T2V) and image-to-video (I2V) models. In addition to being a comprehensive benchmark, WorldModelBench features two unique advantages.
+
+Figure 1: Model A and B generate high qual ity videos, but the robotic arm in A’s video is on the air, violating gravity. Established benchmarks focus on general video quality assessment, and does not distinguish videos that violate physical laws.
+
+Firstly, WorldModelBench detects nuanced world modeling violations that are overlooked by previous benchmarks. WorldModelBench maintains a minimal evaluation on general video quality (frame-wise and temporal quality), and focuses to introduce two di mensions specifically for world modeling: instruction following and physics adherence. It further provides fine-grained categories for these two dimensions to capture nuances: instruction following dimension is broken down into four levels and physics adherence are listed into five common violations (§ 3.1). By using this setup, it effectively capture cases such as object changing sizes as Newton’s law violation. Secondly, WorldModelBench is paired with large scale human labels. We conduct a large scale human annotation procedure and collect 67K human labels to accurately reflect the performance of existing mod els with the proposed metrics (§ 3.3). Using these human annotations, we offer several key insights of current video generation models, e.g. insufficient tun
+
+ing on I2V models, in § 4. We further fine-tune a 2B 
+parameter judger on the collected human labels to facilitate future model evaluations. We find that the 
+fine-tuned judger, despite lightweight, learns to predict human preference with 9.9% lower error rate 
+than GPT-4o [2], thanks to our high-quality human labels. More importantly, we find that aligning 
+the human annotations by maximizing the scores from the fine-tuned judger improves the world 
+modeling capability of video generation models [65, 44]. Our contributions are: 
+1. We demonstrate that previous benchmarks are insufficient for video world models, and 
+contribute WorldModelBench to measure world modeling capability of video generation 
+models on diverse application driven domains. 
+2. A large scale of 67K human labels for 14 frontier models, for the community to conduct 
+further research. 
+3. An accurate fine-tuned judger. This judger accurately predicts world modeling violations, 
+and fine-tuning on its rewards leads to better generation. 
+
+#### 2 Related Works
+
+Video generation models Many diffusion-based video generation models have made major im provement in synthesizing realistic videos [30, 24, 38, 12, 13, 23, 50, 52, 38, 47, 57, 62, 14, 15, 60, 18, 59, 65, 42, 37, 39, 29, 3, 56]. Many of these models synthesized videos based on input text condition, e.g. [12, 13, 23, 50, 52, 59, 65, 42, 29, 37, 39] image condition [5], or both [56, 57, 65, 30]. In this paper, we focus on evaluation of video models with text and image conditions.
+
+(a) Newton’s First Law violation (b) Solid mechanics violation (c) Fluid mechanics violation (d) Impenetrability violation
+
+(e) Gravity violation Figure 3: Examples of Physics violations.
+
+Evaluation of video generation models. Pre vious video generation evaluation mainly uses single-number metric such as Frechet Video Dis tance (FVD) [48] and CLIPSIM [45]. Huang et al. [26] establishes VBench that provides a comprehensive evaluation on video generation models, focusing on general video quality and video-condition consistency. Wu et al. [54] proposes T2VScore with text-video and general video quality criteria. Bansal et al. [4] further proposes to evaluate videos on whether it fol lows the correct physics rules in a 0 or 1 gran ularity. They also keep an instruction following category in a 0 or 1 granularity. Our World ModelBench further improves along the direc tion with more fine-grained physics scoring and instruction following scoring, incorporating di verse application domains, and also incorporate previous metrics from VBench. He et al. [22] also uses human annotators, but does not focus on physics and instruction following capability. [27] studies the physics adherence of video gen eration models on 2D simulation. Reward models for video generation models Li et al. [33], Prabhudesai et al. [44] explores using reward models to improve the quality of video generation models. Unlike a rich set of image reward models [58, 55, 28], there is fewer video reward models [33]. VideoPhy collects human labeled data with 0-1 corase labels on whether the model follows instruction or physics. However, they do not further improve the video generation based on the trained reward model. In this paper, we collected a large scale of human preference in video, specifically in the context of world modeling, and train an accurate reward model to reflect human preference. Learning from reward models has been shown effective to align the model output with human preference in the text domain [32, 43]. In the video generation domain, [61] uses a text-image reward model (RM) to improve the generation quality from human feedback. [33] further extends the idea to use a mixture of text-image and text-video RM to improve model. [44] proposes the reward gradient
+
+framework that incorporates multiple reward models. We follow the reward gradients framework with our fine-tuned judger as the reward model to improve the video generation capability.
+
+#### 3 WorldModelBench
+
+In this section, we formally introduce WorldModelBench.
+
+Design principle An ideal video world model should synthesize feasible next few frames of the world in response to text (and image) instruction, to facilitate decision-making downstream applications. Thus, the assessment of these models should include: the judgment on the ability to precisely follow instruction in input condition, the judgment on the ability to accurately synthesize next few frames, and include diverse application domains.
+
+Comedy
+
+Action
+
+Mystery
+
+Love
+
+DramaSci-Fi
+
+Adventure Award
+
+Fantasy L
+
+W e a t h e r M o v e
+
+Pl a c e Put Take Turn Close Pick Slide Open Sweep Machinery Food Metalworking Engine Aerospace Adventure Action Simulation RPG Strategy Role-Play Jum
+
+H a n d s
+
+E ati n g Cook Acceleration
+
+Yielding Stopping
+
+Obstacle Deceleration
+
+Overtaking
+
+Maneuvering
+
+Turning
+
+Steady
+
+Navigation
+
+Animation
+
+Natural Robotics
+
+Gaming
+
+Humans
+
+D riving
+
+56 Subdomains 
+350 Instances 
+
+Figure 4: WorldModelBench consists of 7 domains and 56 subdomains, totaling 350 image and text conditions.
+
+Specifically, we breakdown our grading criteria into two parts: (1) Instruction following: whether the generated videos correctly follow the text (and image) prompt, and (2) Future frame generation: whether the generated videos represents f

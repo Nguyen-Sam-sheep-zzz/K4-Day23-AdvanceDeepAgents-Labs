@@ -1,0 +1,33 @@
+{
+  "topic": "survey about video and multimodal generation",
+  "model": "gpt-6-luna",
+  "elapsed_s": 377.1,
+  "subagent_calls": 8,
+  "tool_calls": {
+    "write_todos": 2,
+    "task": 8,
+    "glob": 1,
+    "read_file": 8,
+    "ls": 1,
+    "write_file": 2,
+    "execute": 3,
+    "edit_file": 2
+  },
+  "tokens": {
+    "input": 368566,
+    "output": 8498
+  },
+  "researcher_calls": 7,
+  "checker_calls": 1,
+  "max_parallel_researchers": 3,
+  "successful_researcher_calls": 4,
+  "successful_checker_calls": 1,
+  "token_scope": "lead_messages_only",
+  "n_sources": 12,
+  "source_families": [
+    "arxiv",
+    "hf-daily",
+    "hf-search",
+    "web"
+  ]
+}

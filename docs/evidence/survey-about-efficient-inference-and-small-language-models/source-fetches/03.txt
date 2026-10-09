@@ -1,0 +1,228 @@
+# Compact Language Models via Pruning and Knowledge Distillation
+URL: https://proceedings.neurips.cc/paper_files/paper/2024/file/4822991365c962105b1b95b1107d30e5-Paper-Conference.pdf
+
+### Compact Language Models via Pruning and Knowledge Distillation
+
+Saurav Muralidharan∗ Sharath Turuvekere Sreenivas∗ Raviraj Joshi Marcin Chochowski Mostofa Patwary Mohammad Shoeybi Bryan Catanzaro Jan Kautz Pavlo Molchanov NVIDIA {sauravm,sharatht,ravirajj,mchochowski,mpatwary,mshoeybi, bcatanzaro,jkautz,pmolchanov}@nvidia.com
+
+#### Abstract
+
+Large language models (LLMs) targeting different deployment scales and sizes are currently produced by training each variant from scratch; this is extremely compute-intensive. In this paper, we investigate if pruning an existing LLM and then re-training it with a fraction (<3%) of the original training data can be a suitable alternative to repeated, full retraining. To this end, we develop a set of practical and effective compression best practices for LLMs that combine depth, width, attention and MLP pruning with knowledge distillation-based retraining; we arrive at these best practices through a detailed empirical exploration of pruning strategies for each axis, methods to combine axes, distillation strategies, and search techniques for arriving at optimal compressed architectures. We use this guide to compress the Nemotron-4 family of LLMs by a factor of 2-4× , and compare their performance to similarly-sized models on a variety of language modeling tasks. Deriving 8B and 4B models from an already pretrained 15B model using our approach requires up to 40× fewer training tokens per model compared to training from scratch; this results in compute cost savings of 1.8× for training the full model family (15B, 8B, and 4B). MINITRON models exhibit up to a 16% improvement in MMLU scores compared to training from scratch, perform comparably to other community models such as Mistral 7B, Gemma 7B and Llama-3 8B, and outperform state-of-the-art compression techniques from the literature. We have open-sourced MINITRON model weights on Huggingface 2, with corresponding supplementary material including example code available on GitHub 3.
+
+Nemotron-4 15B
+
+LLaMa-3 8B
+
+Gemma7B
+
+#### 1 Introduction
+
+Minitron 8B
+
+65
+
+Mistral 7B
+
+60 
+40x cheaper 
+9% bettter 
+
+(% )
+
+Minitron 4B
+
+Large language models (LLMs) now dominate real world natural language processing and have demon strated excellent proficiency in understanding diffi cult contexts [7, 40, 52, 49, 48]. To aid users tar geting different deployment sizes and scales, model
+
+Phi-2
+
+55
+
+Nemotron-3 8B
+
+50
+
+| providers | often train an entire | family of models from | | LLaMa-2 7B | | Minitron (resulting models) | | |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | Pruning start | | |
+| scratch, | each with a different size | (number of param | 45 | | | Pruning Path | | |
+| eters). | For instance, the LLaMa-2 | model family [49] | | Gemma2B | | Other Models | | |
+| includes | three different variants | with 7, 13, and 70 bil- | 0.1 | 2.5 | 5.0 | 7.5 10.0 | 12.5 | 15.0 |
+| | | | | Cost to train the model (trillion tokens) | | | | |
+
+∗Equal contribution. 2Minitron Collection on HuggingFace 3https://github.com/NVlabs/Minitron
+
+Figure 1: MINITRON results. Our approach greatly reduces training costs for additional models (40× ) while improving accuracy.
+
+38th Conference on Neural Information Processing Systems (NeurIPS 2024).
+
+| DEP | MLP | ATT | EMB | Distillation Loss | LM Val Loss |
+| --- | --- | --- | --- | --- | --- |
+| ✓ | ✓ | ✓ | ✓ | 5.35 0.38 → | 2.062 |
+| × | ✓ | ✓ | ✓ | 6.33 0.37 → | 2.049 |
+| × | ✓ | ✓ | × | 5.07 0.42 → | 2.101 |
+| ✓ | × | × | × | 8.35 0.49 → | 2.155 |
+| Train | from scratch | (random | init) | 12.27 2.34 → | 3.953 |
+
+Table 1: Demonstration of how various pruning strategies perform before and after lightweight retraining using ∼ 1.8B tokens. We prune the Nemotron-4 15B model down to the size of Nemotron-3 8B and report the change in distillation loss (KL divergence [28] on logits) and the final LM validation loss with retraining. We see that width (attention, MLP, embedding) pruning outperforms depth, but only after retraining. The last row shows change in loss for the Nemotron-3 8B model.
+
+lion parameters, while the Pythia family [6] offers a selection of eight models with sizes ranging from 
+80 million to 12 billion parameters. However, training multiple multi-billion parameter models from 
+scratch is extremely time, data and resource-intensive. In this paper, we ask the following question: 
+can we train one big model, and obtain smaller, more accurate (w.r.t. training from scratch) models 
+from it through a combination of weight pruning and retraining, while only using a small fraction of 
+the original training data? Achieving such a goal would make producing LLMs targeting different 
+deployment scales significantly cheaper. Weight pruning is a powerful and well-known technique for 
+reducing model size [51, 21]. In this paper, we focus on structured pruning, where blocks of nonzero 
+elements are removed at once from model weights; examples of structured pruning techniques include 
+neuron, attention head, convolutional filter, and depth pruning [32, 18, 53, 4, 34, 55, 26]. While the 
+literature is rich with numerous papers on structured pruning, to an end-user, it’s not always clear 
+which technique to use, when, and how to combine them to consistently obtain good pruned models. 
+Pruning is also often accompanied by some amount of retraining for accuracy recovery [51]; this 
+phase is extremely expensive in modern LLMs, often requiring access to large amounts of curated 
+data. To the best of our knowledge, no existing work on structured pruning explores data-efficient 
+retraining techniques such as distillation to minimize retraining cost. 
+In this paper, we perform a thorough empirical exploration of structured pruning and retraining 
+across multiple axes: neurons in feed-forward layers, heads in multi-head attention layers, embedding 
+channels, and model depth. Through our experiments, we gain valuable non-trivial insights on the 
+metrics and hyper-parameters to use for each axis and how to effectively combine axes for higher 
+compression rates. For instance, we discover that pruning neurons and heads alone is initially superior 
+to pruning neurons, heads and embedding channels; however, after a few steps of retraining, this 
+order flips. Similarly, we discover that width pruning works better than depth, but only after some 
+retraining (see Table 1 for a concrete example). We also investigate in detail how a pruned model 
+can be efficiently retrained for optimal performance using minimal additional data. Based on our 
+findings, we develop a practical list of LLM compression and retraining best practices. Finally, we 
+apply our findings to prune the Nemotron-4 15B model [43] and produce a family of smaller models, 
+named MINITRON, that compare favorably to similarly-sized models. MINITRON 8B achieves better 
+accuracy than Nemotron-3 8B [39] (using 40× fewer training tokens) and LLaMa-2 7B [49], and 
+comparable accuracy to Mistral-7B [25], Gemma 7B [48] and Llama-3 8B; likewise, MINITRON 4B 
+outperforms the similarly-sized Gemma2 model and compares favorably to the Phi-2 model. 
+This paper makes the following key contributions: 
+1. Provides the first thorough empirical exploration of structured pruning and retraining in 
+LLMs across multiple axes. It offers valuable insights on metrics and hyper-parameter 
+settings for pruning, order of pruning, effects of combining different axes, and retraining 
+techniques focusing on data efficiency. 
+2. Presents a list of effective and practical LLM compression and retraining best practices 
+grounded in extensive empirical evidence. 
+3. Introduces the MINITRON family of LLMs, which are obtained through direct pruning of 
+the Nemotron-4 15B model. Deriving MINITRON models from Nemotron-4 15B requires 
+up to 40× fewer training tokens compared to training from scratch, while still (1) comparing 
+favorably to various popular community LLMs of similar size, and (2) outperforming 
+state-of-the-art depth and width-pruned models from the literature. 
+
+#### 2 Pruning Methodology
+
+As shown in Figure 2, we start the pruning process by first computing the importance of each layer, neuron, head, and embedding dimension and then sorting these importance scores to compute a corresponding importance ranking. In this section, we detail how rankings are computed for each axis and then subsequently used to obtain a pruned model.
+
+##### 2.1 Background and Notation
+
+We begin with some formal definitions. Multi-Layer Perceptron (MLP) layers have two linear layers with a non-linear activation in between: MLP(X) = δ X · W T 1 · W2 ; here, X de notes the input, and W1 and W2 are the two associated weight matrices in the MLP layer.
+
+W1,W2 ∈ R dhidden× dmodel , where dmodel and dhidden are the embedding and MLP hidden di mensions, respectively. δ(· ) refers to the non-linear activation function.
+
+We define the Multi-Head Attention (MHA) operation for an input X as follows:
+
+MHA(X) = Concat(head1, ...headL) · W O, and headi = Attn(XW Q,i , XW K,i , XW V,i ); here,
+
+W
+
+Q,i ,W
+
+K,i ,W
+
+V,i ∈ R dhead× dmodel and W O ∈ R Ldhead× dmodel where dhead is the size of a single attention head, and L is the total number of heads.
+
+Finally, the Layer Normalization operation (LayerNorm) [5] on an input X is defined as follows: LN(X) = √ X− µ σ2+ϵ⊙ γ + β, where µ and σ 2represent the mean and variance across the embedding dimensions, ϵ is a small value for numerical stability, and γ and β are learnable parameters.
+
+##### 2.2 Importance Analysis
+
+Estimating the importance or sensitivity of individual neural network components such as neurons, attention heads, and layers is a well-studied area [9, 13, 41]. In the context of LLMs, recent work has highlighted the ineffectiveness of traditional metrics such as weight magnitude for estimating importance [33]; instead, recent work on structured pruning of LLMs has focused on metrics such as gradient/Taylor [33], cosine similarity [34], and perplexity on a calibration dataset [26].
+
+Owing to their enormous size, computing gradient information on modern LLMs is prohibitively memory and compute-intensive, and one of our primary goals is to avoid this expensive step when trying to obtain importance information. In this paper, we propose a purely activation-based impor tance estimation strategy that simultaneously computes sensitivity information for all the axes we consider (depth, neuron, head, and embedding channel) using a small (1024 samples) calibration dataset and only forward propagation passes. We now describe how this strategy is implemented for
+
+each individual axis.
+
+B lo c k
+
+L
+
+M
+
+L
+
+P
+
+1. Trained LLM
+
+3. Rank
+
+5. Distillation Iterative
+
+2. Estimate importance
+
+L
+
+Emb1 
+Emb2 
+Emb3 
+Emb4 
+CH 1 
+CH 2 
+CH 3 
+CH 4 
+Emb1 
+Emb2 
+Emb3 
+Emb4 
+Emb1 
+Emb2 
+Emb3 
+Emb4 
+Head1 
+Head2 
+Head3 
+Head4 
+
+L
+
+Emb4 
+Emb2 
+Emb1 
+Emb3 
+CH 1 
+CH 4 
+CH 2 
+CH 3 
+Emb4 
+Emb2 
+Emb1 
+Emb3 
+Emb4 
+Emb2 
+Emb1 
+Emb3 
+Head3 
+Head1 
+Head4 
+Head2 
+
+4. Trim
+
+L
+
+Emb4 
+Emb2 
+CH 1 
+CH 4 
+Emb4 
+Emb2 
+Emb4 
+Emb2 
+Head3 
+Head1 
+Head4 
+
+Figure 2: High-level overview of our proposed iterative pruning and distillation approach to train a family of smaller LLMs. On a pretrained LLM, we first evaluate importance of neurons, rank them, trim the least important neurons and distill the knowledge from the original LLM to the pruned model.
+
+The original model is replaced with the distilled model for the next iteration of compression.
+
+Width: we compute the importance of each head, neuron and embedding channel by examining the activations produced by the MHA, MLP and LayerNorm layers, respectively. We use a small calibration dataset D for this purpose 4. Formally, we compute activation-based importance scores for heads, neurons, and embedding channels as: F (i) head = P B,S∥ At

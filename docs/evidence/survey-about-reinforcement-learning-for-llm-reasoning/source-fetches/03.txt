@@ -1,0 +1,238 @@
+# DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning | Nature
+URL: https://www.nature.com/articles/s41586-025-09422-z
+Published: 2025-09-17
+Author: Guo, Daya, Yang, Dejian, Zhang, Haowei, Song, Junxiao, Wang, Peiyi
+
+DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning | Nature
+
+- Article
+- Open access
+- Published: 17 September 2025
+
+# DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning
+
+- Daya Guo 1, 
+- Dejian Yang 1, 
+- Haowei Zhang 1, 
+- Junxiao Song 1, 
+- Peiyi Wang 1, 
+- Qihao Zhu 1, 
+- Runxin Xu 1, 
+- Ruoyu Zhang 1, 
+- Shirong Ma 1, 
+- Xiao Bi 1, 
+- Xiaokang Zhang 1, 
+- Xingkai Yu 1, 
+- Yu Wu 1, 
+- Z. F. Wu 1, 
+- Zhibin Gou 1, 
+- Zhihong Shao 1, 
+- Zhuoshu Li 1, 
+- Ziyi Gao 1, 
+- Aixin Liu 1, 
+- Bing Xue 1, 
+- Bingxuan Wang 1, 
+- Bochao Wu 1, 
+- Bei Feng 1, 
+- Chengda Lu 1, 
+- Chenggang Zhao 1, 
+- Chengqi Deng 1, 
+- Chong Ruan 1, 
+- Damai Dai 1, 
+- Deli Chen 1, 
+- Dongjie Ji 1, 
+- Erhang Li 1, 
+- Fangyun Lin 1, 
+- Fucong Dai 1, 
+- Fuli Luo 1 nAff2, 
+- Guangbo Hao 1, 
+- Guanting Chen 1, 
+- Guowei Li 1, 
+- H. Zhang 1, 
+- Hanwei Xu 1, 
+- Honghui Ding 1, 
+- Huazuo Gao 1, 
+- Hui Qu 1, 
+- Hui Li 1, 
+- Jianzhong Guo 1, 
+- Jiashi Li 1, 
+- Jingchang Chen 1, 
+- Jingyang Yuan 1, 
+- Jinhao Tu 1 nAff3, 
+- Junjie Qiu 1, 
+- Junlong Li 1, 
+- J. L. Cai 1, 
+- Jiaqi Ni 1, 
+- Jian Liang 1, 
+- Jin Chen 1, 
+- Kai Dong 1, 
+- Kai Hu 1 nAff4, 
+- Kaichao You 1, 
+- Kaige Gao 1, 
+- Kang Guan 1, 
+- Kexin Huang 1 nAff5, 
+- Kuai Yu 1, 
+- Lean Wang 1, 
+- Lecong Zhang 1, 
+- Liang Zhao 1, 
+- Litong Wang 1, 
+- Liyue Zhang 1, 
+- Lei Xu 1, 
+- Leyi Xia 1, 
+- Mingchuan Zhang 1, 
+- Minghua Zhang 1, 
+- Minghui Tang 1, 
+- Mingxu Zhou 1, 
+- Meng Li 1, 
+- Miaojun Wang 1, 
+- Mingming Li 1, 
+- Ning Tian 1, 
+- Panpan Huang 1, 
+- Peng Zhang 1, 
+- Qiancheng Wang 1, 
+- Qinyu Chen 1, 
+- Qiushi Du 1, 
+- Ruiqi Ge 1, 
+- Ruisong Zhang 1, 
+- Ruizhe Pan 1, 
+- Runji Wang 1, 
+- R. J. Chen 1, 
+- R. L. Jin 1, 
+- Ruyi Chen 1, 
+- Shanghao Lu 1, 
+- Shangyan Zhou 1, 
+- Shanhuang Chen 1, 
+- Shengfeng Ye 1, 
+- Shiyu Wang 1, 
+- Shuiping Yu 1, 
+- Shunfeng Zhou 1, 
+- Shuting Pan 1, 
+- S. S. Li 1, 
+- Shuang Zhou 1, 
+- Shaoqing Wu 1, 
+- Tao Yun 1, 
+- Tian Pei 1, 
+- Tianyu Sun 1, 
+- T. Wang 1, 
+- Wangding Zeng 1, 
+- Wen Liu 1, 
+- Wenfeng Liang 1, 
+- Wenjun Gao 1, 
+- Wenqin Yu ORCID: orcid.org/0000-0002-5715-3011 1 nAff5, 
+- Wentao Zhang 1, 
+- W. L. Xiao 1, 
+- Wei An 1, 
+- Xiaodong Liu 1, 
+- Xiaohan Wang 1, 
+- Xiaokang Chen 1, 
+- Xiaotao Nie 1, 
+- Xin Cheng 1, 
+- Xin Liu 1, 
+- Xin Xie 1, 
+- Xingchao Liu 1, 
+- Xinyu Yang 1, 
+- Xinyuan Li 1 nAff5, 
+- Xuecheng Su 1, 
+- Xuheng Lin 1, 
+- X. Q. Li 1, 
+- Xiangyue Jin 1, 
+- Xiaojin Shen 1, 
+- Xiaosha Chen 1, 
+- Xiaowen Sun 1, 
+- Xiaoxiang Wang 1, 
+- Xinnan Song 1, 
+- Xinyi Zhou 1, 
+- Xianzu Wang 1, 
+- Xinxia Shan 1, 
+- Y. K. Li 1, 
+- Y. Q. Wang 1, 
+- Y. X. Wei 1, 
+- Yang Zhang 1, 
+- Yanhong Xu 1, 
+- Yao Li 1, 
+- Yao Zhao 1, 
+- Yaofeng Sun 1, 
+- Yaohui Wang 1, 
+- Yi Yu 1, 
+- Yichao Zhang 1, 
+- Yifan Shi 1, 
+- Yiliang Xiong 1, 
+- Ying He 1, 
+- Yishi Piao 1, 
+- Yisong Wang 1, 
+- Yixuan Tan 1, 
+- Yiyang Ma 1, 
+- Yiyuan Liu 1, 
+- Yongqiang Guo 1, 
+- Yuan Ou 1, 
+- Yuduan Wang 1, 
+- Yue Gong 1 nAff5, 
+- Yuheng Zou 1, 
+- Yujia He 1 nAff5, 
+- Yunfan Xiong 1, 
+- Yuxiang Luo 1, 
+- Yuxiang You 1, 
+- Yuxuan Liu 1, 
+- Yuyang Zhou 1, 
+- Y. X. Zhu 1, 
+- Yanping Huang 1, 
+- Yaohui Li 1, 
+- Yi Zheng 1, 
+- Yuchen Zhu 1, 
+- Yunxian Ma 1, 
+- Ying Tang 1, 
+- Yukun Zha 1, 
+- Yuting Yan 1, 
+- Z. Z. Ren 1, 
+- Zehui Ren 1, 
+- Zhangli Sha 1, 
+- Zhe Fu 1, 
+- Zhean Xu 1, 
+- Zhenda Xie 1, 
+- Zhengyan Zhang 1, 
+- Zhewen Hao 1, 
+- Zhicheng Ma 1, 
+- Zhigang Yan 1, 
+- Zhiyu Wu 1, 
+- Zihui Gu 1, 
+- Zijia Zhu 1, 
+- Zijun Liu 1 nAff6, 
+- Zilin Li 1, 
+- Ziwei Xie 1, 
+- Ziyang Song 1 nAff7, 
+- Zizheng Pan 1, 
+- Zhen Huang 1, 
+- Zhipeng Xu 1, 
+- Zhongyu Zhang 1 & 
+- …
+- Zhen Zhang 1 
+
+## Abstract
+
+General reasoning represents a long-standing and formidable challenge in artificial intelligence (AI). Recent breakthroughs, exemplified by large language models (LLMs) 1, 2 and chain-of-thought (CoT) prompting 3, have achieved considerable success on foundational reasoning tasks. However, this success is heavily contingent on extensive human-annotated demonstrations and the capabilities of models are still insufficient for more complex problems. Here we show that the reasoning abilities of LLMs can be incentivized through pure reinforcement learning (RL), obviating the need for human-labelled reasoning trajectories. The proposed RL framework facilitates the emergent development of advanced reasoning patterns, such as self-reflection, verification and dynamic strategy adaptation. Consequently, the trained model achieves superior performance on verifiable tasks such as mathematics, coding competitions and STEM fields, surpassing its counterparts trained through conventional supervised learning on human demonstrations. Moreover, the emergent reasoning patterns exhibited by these large-scale models can be systematically used to guide and enhance the reasoning capabilities of smaller models.
+
+## Main
+
+Reasoning capability, the cornerstone of human intelligence, enables complex cognitive tasks ranging from mathematical problem-solving to logical deduction and programming. Recent advances in AI have demonstrated that LLMs can exhibit emergent behaviours, including reasoning abilities, when scaled to a sufficient size 4, 5. However, achieving such capabilities in pre-training typically demands substantial computational resources. In parallel, a complementary line of research has demonstrated that LLMs can be effectively augmented through CoT prompting. This technique, which involves either providing carefully designed few-shot examples or using minimalistic prompts such as “Let’s think step by step” 3, 6, enables models to produce intermediate reasoning steps, thereby substantially enhancing their performance on complex tasks. Similarly, further performance gains have been observed when models learn high-quality, multistep reasoning trajectories during the post-training phase 2, 7. Despite their effectiveness, these approaches exhibit notable limitations. Their dependence on human-annotated reasoning traces slows scalability and introduces cognitive biases. Furthermore, by constraining models to replicate human thought processes, their performance is inherently capped by the human-provided exemplars, which prevents the exploration of superior, non-human-like reasoning pathways.
+
+To tackle these issues, we aim to explore the potential of LLMs for developing reasoning abilities through self-evolution in a RL framework, with minimal reliance on human labelling efforts. Specifically, we build on DeepSeek-V3 Base 8 and use Group Relative Policy Optimization (GRPO) 9 as our RL framework. The reward signal is only based on the correctness of final predictions against ground-truth answers, without imposing constraints on the reasoning process itself. Notably, we bypass the conventional supervised fine-tuning (SFT) phase before RL training. This design choice originates from our hypothesis that human-defined reasoning patterns may limit model exploration, whereas unrestricted RL training can better incentivize the emergence of new reasoning capabilities in LLMs. Through this process, detailed in the next section, our model (referred to as DeepSeek-R1-Zero) naturally developed diverse and sophisticated reasoning behaviours. To solve reasoning problems, the model exhibits a tendency to generate longer responses, incorporating verification, reflection and the exploration of alternative approaches within each response. Although we do not explicitly teach the model how to reason, it successfully learns improved reasoning strategies through RL.
+
+Although DeepSeek-R1-Zero demonstrates excellent reasoning capabilities, it faces challenges such as poor readability and language mixing, occasionally combining English and Chinese in a single CoT response. Furthermore, the rule-based RL training stage of DeepSeek-R1-Zero is narrowly focused on reasoning tasks, resulting in limited performance in broader areas such as writing and open-domain question answering. To address these challenges, we introduce DeepSeek-R1, a model trained through a multistage learning framework that integrates rejection sampling, RL and supervised fine-tuning, detailed in the ‘DeepSeek-R1’ section. This training pipeline enables DeepSeek-R1 to inherit the reasoning capabilities of its predecessor, DeepSeek-R1-Zero, while aligning model behaviour with human preferences through further non-reasoning data.
+
+To enable broader access to powerful AI at a lower energy cost, we have distilled several smaller models and made them publicly available. These distilled models exhibit strong reasoning capabilities, surpassing the performance of their original instruction-tuned counterparts. We believe that these instruction-tuned versions will also greatly contribute to the research community by providing a valuable resource for understanding the mechanisms underlying long CoT reasoning models and for promoting the development of more powerful reasoning models. We release DeepSeek-R1-Zero, DeepSeek-R1, data samples and distilled models to the public as described in the ‘Code availability’ section.
+
+## DeepSeek-R1-Zero
+
+To implement large-scale RL of DeepSeek-R1-Zero, we use a highly efficient RL pipeline. Specifically, we use GRPO 9 as our RL algorithm, described in Methods section ‘GRPO’. Furthermore, we use a rule-based reward system to compute accuracy and format rewards, with detailed methodologies outlined in Methods section ‘Reward design’. Furthermore, our high-performance RL infrastructure is described in Supplementary Information, section 2.1, ensuring scalable and efficient training.
+
+Specifically, we apply the RL technique on the DeepSeek-V3 Base to train DeepSeek-R1-Zero. During training, we design a straightforward template to require DeepSeek-R1-Zero to first produce a reasoning process, followed by the final answer. The prompt template is written as below.
+
+“A conversation between User and Assistant. The User asks a question and the Assistant solves it. The Assistant first thinks about the reasoning process in the mind and then provides the User with the answer. The reasoning process and answer are enclosed within... and... tags, respectively, that is, reasoning process here answer here. User: prompt. Assistant:”, in which the prompt is replaced with the specific reasoning question during training. We intentionally limit our constraints to this structural format, avoiding any content-specific biases to ensure that we can accurately observe the natural progression of the model during the RL process.
+
+Figure 1a shows the performance trajectory of DeepSeek-R1-Zero on the American Invitational Mathematics Examination (AIME) 2024 benchmark throughout the RL training process, in which the average pass@1 score on AIME 2024 shows a marked increase, jumping from an initial value of 15.6% to 77.9%. Also, by using the self-consistency decoding 10, the performance of the model can be further improved, achieving an accuracy of 86.7%. This performance greatly surpasses the average performance across all human competitors of the AIME. Besides the maths competitions, as shown in Supplementary Fig. 8, DeepSeek-R1-Zero also achieves remarkable performance in coding competitions and graduate-level biology, physics and chemistry problems. These results underscore the effectiveness of RL in enhancing the reasoning capabilities of LLMs.
+
+Fig. 1: Accuracy and output length of DeepSeek-R1-Zero throughout the training process.
+
+Full size image
+
+a, AIME accuracy of DeepSeek-R1-Zero during training. AIME takes a mathematical problem as input and a number as output, illustrated in Extended Data Table 1. pass@1 and cons@16 are described in Supplementary Information, section 4.1. The baseline is the average score achieved by human participants in the AIME com

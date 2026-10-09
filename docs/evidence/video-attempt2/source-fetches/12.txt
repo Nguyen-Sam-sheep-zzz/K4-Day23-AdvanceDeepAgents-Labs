@@ -1,0 +1,99 @@
+# Paper page - LPM 1.0: Video-based Character Performance Model
+URL: https://huggingface.co/papers/2604.07823
+Author: Ailing Zeng
+
+# LPM 1.0: Video-based Character Performance Model
+
+Published on Apr 9
+
+· Submitted by
+
+ aznukad
+
+on Apr 10
+
+Authors:
+
+Ailing Zeng ,
+
+Casper Yang ,
+
+Chauncey Ge ,
+
+ Eddie Zhang ,
+
+Garvey Xu ,
+
+Gavin Lin ,
+
+Gilbert Gu ,
+
+Jeremy Pi ,
+
+Leo Li ,
+
+ Mingyi Shi ,
+
+Sheng Bi ,
+
+Steven Tang ,
+
+Thorn Hang ,
+
+Tobey Guo ,
+
+Vincent Li ,
+
+Xin Tong ,
+
+Yikang Li ,
+
+Yuchen Sun ,
+
+Yue ,
+
+ Zhao ,
+
+Yuhan Lu ,
+
+Yuwei Li 
+
+## Abstract
+
+A large-scale multimodal model for real-time conversational character performance generation that maintains identity consistency while enabling interactive, infinite-length video synthesis.
+
+Performance, the externalization of intent, emotion, and personality through visual, vocal, and temporal behavior, is what makes a character alive. Learning such performance from video is a promising alternative to traditional 3D pipelines. However, existing video models struggle to jointly achieve high expressiveness, real-time inference, and long-horizon identity stability, a tension we call the performance trilemma. Conversation is the most comprehensive performance scenario, as characters simultaneously speak, listen, react, and emote while maintaining identity over time. To address this, we present LPM 1.0 (Large Performance Model), focusing on single-person full-duplex audio-visual conversational performance. Concretely, we build a multimodal human-centric dataset through strict filtering, speaking-listening audio-video pairing, performance understanding, and identity-aware multi-reference extraction; train a 17B-parameter Diffusion Transformer (Base LPM) for highly controllable, identity-consistent performance through multimodal conditioning; and distill it into a causal streaming generator (Online LPM) for low-latency, infinite-length interaction. At inference, given a character image with identity-aware references, LPM 1.0 generates listening videos from user audio and speaking videos from synthesized audio, with text prompts for motion control, all at real-time speed with identity-stable, infinite-length generation. LPM 1.0 thus serves as a visual engine for conversational agents, live streaming characters, and game NPCs. To systematically evaluate this setting, we propose LPM-Bench, the first benchmark for interactive character performance. LPM 1.0 achieves state-of-the-art results across all evaluated dimensions while maintaining real-time inference.
+
+View arXiv page View PDF Project page GitHub 367 Add to collection 
+
+### Community
+
+alkxncda
+
+Long, real-time, multimodal video generation.
+
+librarian-bot
+
+Apr 11
+
+This is an automated message from the Librarian Bot. I found the following papers similar to this paper. 
+
+ If you want recommendations for any Paper on Hugging Face checkout this Space
+
+ You can directly ask Librarian Bot for paper recommendations by tagging it in a comment: `@librarian-bot recommend`
+
+CCP6
+
+Apr 12
+
+edited Apr 12
+
+It's rich that you benefited from the open source contribution of Wan and then literally -go off- on any thought of open sourcing your work here. 
+
+Do what you're going to do, but don't take a shot at those who release open weights and code for the benefit of research.
+
+Bad form.
+
+Apr 14
+
+read through this and the Video-based Character Performance Model piece was the most interesting part to me, wrote up notes here https://arxivexplained.com/lpm-10-video-based-character-performance-model
